@@ -1,22 +1,126 @@
-body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 10px; margin: 0; }
-.container { max-width: 900px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-.title-red { color: #b40000; text-align: center; border-bottom: 2px solid #b40000; padding-bottom: 5px; font-size: 1.3em; }
-.subtitle { text-align: center; font-size: 0.9em; margin-bottom: 20px; color: #555; }
-fieldset { border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; padding: 12px; background: #fafafa; }
-legend { font-weight: bold; color: #1a5a8f; font-size: 0.8em; text-transform: uppercase; }
-.grid-form { display: grid; grid-template-columns: 1fr; gap: 10px; }
-@media (min-width: 600px) { .grid-form { grid-template-columns: 1fr 1fr; } }
-input, select { padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; width: 100%; box-sizing: border-box; }
-.button-group { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
-@media (min-width: 600px) { .button-group { flex-direction: row; flex-wrap: wrap; } .button-group button { flex: 1; } }
-button { padding: 16px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+/* Design Mobile-First pour PF Solidaire */
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    background: #f4f7f9; 
+    padding: 10px; 
+    margin: 0; 
+}
+
+.container { 
+    max-width: 800px; 
+    margin: auto; 
+    background: white; 
+    padding: 15px; 
+    border-radius: 12px; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+}
+
+.title-red { 
+    color: #b40000; 
+    text-align: center; 
+    font-size: 1.2em; 
+    margin: 10px 0 5px 0;
+}
+
+.subtitle { 
+    text-align: center; 
+    font-size: 0.85em; 
+    color: #555; 
+    margin-bottom: 20px; 
+}
+
+fieldset { 
+    border: 1px solid #ddd; 
+    border-radius: 8px; 
+    margin-bottom: 15px; 
+    padding: 12px; 
+    background: #fff; 
+}
+
+legend { 
+    font-weight: bold; 
+    color: #1a5a8f; 
+    font-size: 0.8em; 
+    text-transform: uppercase; 
+    padding: 0 10px;
+}
+
+.grid-form { 
+    display: grid; 
+    grid-template-columns: 1fr; 
+    gap: 12px; 
+}
+
+@media (min-width: 600px) {
+    .grid-form { grid-template-columns: 1fr 1fr; }
+}
+
+input, select { 
+    padding: 12px; 
+    border: 1px solid #ccc; 
+    border-radius: 6px; 
+    font-size: 16px; /* Important pour éviter le zoom iOS */
+    width: 100%; 
+    box-sizing: border-box;
+}
+
+.highlight-select { 
+    background: #fffef0; 
+    border: 1px solid #f39c12; 
+    font-weight: bold;
+}
+
+.button-group { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    margin-top: 20px; 
+}
+
+@media (min-width: 600px) {
+    .button-group { flex-direction: row; flex-wrap: wrap; }
+    .button-group button { flex: 1; }
+}
+
+button { 
+    padding: 16px; 
+    border: none; 
+    border-radius: 8px; 
+    color: white; 
+    font-weight: bold; 
+    font-size: 14px;
+    cursor: pointer;
+}
+
 .btn-reset { background: #7f8c8d; }
 .btn-red { background: #c0392b; }
 .btn-green { background: #27ae60; }
 .btn-blue { background: #2980b9; }
 .btn-purple { background: #8e44ad; }
-.profession-box, .matrimoniale-box { background: #ebf2f7; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; gap: 8px; }
-.radio-group { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.9em; }
-.date-input { display: flex; flex-direction: column; gap: 4px; font-size: 0.8em; }
-.green-section { border-color: #27ae60; background: #f0fff4; }
-.blue-section { border-color: #2980b9; background: #f0f7ff; }
+
+.profession-box, .matrimoniale-box { 
+    background: #f8fbff; 
+    padding: 10px; 
+    border-radius: 6px; 
+    border: 1px dashed #cbdcf0;
+}
+
+.radio-group { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+    margin: 8px 0;
+    font-size: 0.9em;
+}
+
+.date-input { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px; 
+}
+
+.date-input label { 
+    font-size: 0.75em; 
+    font-weight: bold; 
+    color: #666; 
+}
