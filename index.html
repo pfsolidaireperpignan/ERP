@@ -36,8 +36,7 @@
                     <option value="Transport">Transport</option>
                 </select>
                 <div class="date-input"><label>Prévue le :</label><input id="date_prestation" type="date"></div>
-                <input id="lieu_prestation" placeholder="Lieu (Cimetière / Crématorium)">
-                <input id="nom" placeholder="NOM D'USAGE">
+                <input id="nom" placeholder="NOM DU DÉFUNT">
                 <input id="prenom" placeholder="Prénoms">
                 <select id="sexe"><option value="Masculin">Masculin</option><option value="Féminin">Féminin</option></select>
                 <div class="date-input"><label>Né le :</label><input id="date_naiss" type="date"></div>
@@ -56,9 +55,6 @@
                     <input id="profession_autre" placeholder="Précisez le métier">
                 </div>
 
-                <input id="pere" placeholder="Père (Prénom NOM)">
-                <input id="mere" placeholder="Mère (Prénom NOM)">
-                
                 <div class="matrimoniale-box">
                     <select id="matrimoniale" onchange="toggleConjoint()">
                         <option value="Célibataire">Célibataire</option>
@@ -69,27 +65,6 @@
                     <input id="conjoint" placeholder="Nom du Conjoint" disabled>
                 </div>
                 <input id="nationalite" value="Française" placeholder="Nationalité">
-            </div>
-        </fieldset>
-
-        <fieldset class="green-section">
-            <legend>Transport Avant Mise en Bière</legend>
-            <div class="grid-form">
-                <input id="immatriculation" placeholder="Immatriculation" value="DA-081-ZQ">
-                <div class="date-input"><label>Départ :</label><input id="date_depart_t" type="date"></div>
-                <div class="date-input"><label>Heure :</label><input id="heure_depart_t" type="time"></div>
-                <input id="lieu_depart_t" placeholder="Lieu de départ">
-                <div class="date-input"><label>Arrivée :</label><input id="date_arrivee_t" type="date"></div>
-                <div class="date-input"><label>Heure :</label><input id="heure_arrivee_t" type="time"></div>
-                <input id="lieu_arrivee_t" placeholder="Lieu d'arrivée">
-            </div>
-        </fieldset>
-
-        <fieldset class="blue-section">
-            <legend>Fermeture</legend>
-            <div class="grid-form">
-                <div class="date-input"><label>Fermeture le :</label><input id="date_fermeture" type="date"></div>
-                <input id="lieu_fermeture" placeholder="Lieu (Chambre Fun., Domicile...)">
             </div>
         </fieldset>
 
