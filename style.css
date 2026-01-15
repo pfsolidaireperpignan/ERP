@@ -152,6 +152,40 @@ input:disabled { background-color: #f1f5f9; cursor: not-allowed; }
 .fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+/* TABLE BASE CLIENTS */
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+.client-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+.client-table th {
+    background-color: #f8fafc;
+    color: var(--primary);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.client-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+}
+.client-table tr:hover {
+    background-color: #f1f5f9;
+}
+.badge {
+    padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;
+}
+.badge-inhumation { background: #dcfce7; color: #166534; }
+.badge-cremation { background: #f3e8ff; color: #6b21a8; }
+.badge-rapatriement { background: #fee2e2; color: #991b1b; }
+
 @media (max-width: 768px) {
     .grid-form { grid-template-columns: 1fr; }
     .span-2 { grid-column: auto; }

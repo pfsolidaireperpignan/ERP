@@ -18,7 +18,7 @@
             <div class="input-group">
                 <input type="password" id="password-input" placeholder="Code d'accès...">
             </div>
-            <button onclick="checkPassword()" class="btn-login">
+            <button onclick="window.checkPassword()" class="btn-login">
                 Connexion <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
             </button>
             <p id="login-error" class="error-msg" style="display:none; color:#ef4444; margin-top:10px;">
@@ -42,19 +42,33 @@
         </header>
 
         <nav class="tab-navigation">
-            <button class="tab-btn active" onclick="openTab('tab-dossier')">
+            <button class="tab-btn active" onclick="window.openTab('tab-dossier')">
                 <i class="fas fa-folder-open"></i> 1. Dossier
             </button>
-            <button class="tab-btn" onclick="openTab('tab-documents')">
-                <i class="fas fa-print"></i> 2. Documents & Demandes
+            <button class="tab-btn" onclick="window.openTab('tab-documents')">
+                <i class="fas fa-print"></i> 2. Documents
             </button>
-            <button class="tab-btn" onclick="openTab('tab-technique')">
+            <button class="tab-btn" onclick="window.openTab('tab-technique')">
                 <i class="fas fa-cogs"></i> 3. Technique
+            </button>
+            <button class="tab-btn" onclick="window.openTab('tab-base')" style="color: var(--purple-brand);">
+                <i class="fas fa-database"></i> 4. Base Clients
             </button>
         </nav>
 
         <div id="tab-dossier" class="tab-content fade-in active">
             
+            <div class="actions-bar" style="margin-bottom: 20px; justify-content: space-between; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <span style="font-weight:bold; color:var(--primary);">Dossier en cours :</span>
+                    <span id="current-client-name" style="color:var(--accent);">Nouveau (Non enregistré)</span>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="window.resetDossier()" class="btn btn-outline" style="padding: 8px 15px; font-size: 0.85rem;"><i class="fas fa-file"></i> Nouveau</button>
+                    <button onclick="window.sauvegarderClient()" class="btn btn-green" style="padding: 8px 15px; font-size: 0.85rem;"><i class="fas fa-save"></i> Enregistrer</button>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header"><i class="fas fa-user-pen"></i> Mandant (Famille)</div>
                 <div class="card-body grid-form">
@@ -101,14 +115,14 @@
                         <option value="Casablanca (Maroc)"><option value="Rabat (Maroc)"><option value="Aklim Berkane (Maroc)">
                     </datalist>
 
-                    <div class="input-group span-2"><label>Dernier Domicile</label><input id="adresse_fr" placeholder="Adresse complète du défunt"></div>
+                    <div class="input-group span-2"><label>Dernier Domicile</label><input id="adresse_fr" placeholder="Adresse complète"></div>
                     
                     <div class="input-group span-2">
                         <label>Situation Professionnelle</label>
                         <div class="segment-control">
-                            <label><input type="radio" name="prof_type" value="Sans profession" onclick="toggleProf(false)"><span>Sans prof.</span></label>
-                            <label><input type="radio" name="prof_type" value="Retraité(e)" onclick="toggleProf(false)"><span>Retraité(e)</span></label>
-                            <label><input type="radio" name="prof_type" value="autre" onclick="toggleProf(true)" checked><span>Active / Autre</span></label>
+                            <label><input type="radio" name="prof_type" value="Sans profession" onclick="window.toggleProf(false)"><span>Sans prof.</span></label>
+                            <label><input type="radio" name="prof_type" value="Retraité(e)" onclick="window.toggleProf(false)"><span>Retraité(e)</span></label>
+                            <label><input type="radio" name="prof_type" value="autre" onclick="window.toggleProf(true)" checked><span>Active / Autre</span></label>
                         </div>
                         <input id="profession_autre" placeholder="Précisez le métier (ex: Enseignant)" style="margin-top: 10px;">
                     </div>
@@ -118,7 +132,7 @@
                     
                     <div class="input-group">
                         <label>Situation Matrimoniale</label>
-                        <select id="matrimoniale" onchange="toggleConjoint()">
+                        <select id="matrimoniale" onchange="window.toggleConjoint()">
                             <option value="Célibataire">Célibataire</option><option value="Marié(e)">Marié(e)</option>
                             <option value="Veuf(ve)">Veuf(ve)</option><option value="Divorcé(e)">Divorcé(e)</option>
                         </select>
@@ -134,9 +148,10 @@
             <div class="card" style="border-left: 4px solid var(--accent);">
                 <div class="card-header"><i class="fas fa-church"></i> Cérémonie & Technique</div>
                 <div class="card-body grid-form">
+                    
                     <div class="input-group span-2 highlight-box">
                         <label>Type d'opération principale</label>
-                        <select id="prestation" onchange="toggleCeremonie()" style="font-weight:bold; color:var(--primary-dark);">
+                        <select id="prestation" onchange="window.toggleCeremonie()" style="font-weight:bold; color:var(--primary-dark);">
                             <option value="Inhumation" selected>Inhumation</option>
                             <option value="Crémation">Crémation</option>
                             <option value="Exhumation">Exhumation</option>
@@ -197,7 +212,7 @@
 
                             <div class="input-group span-2">
                                 <label style="display:flex; align-items:center; cursor:pointer;">
-                                    <input type="checkbox" id="check_vol2" onclick="toggleVol2()" style="width:auto; margin-right:8px;">
+                                    <input type="checkbox" id="check_vol2" onclick="window.toggleVol2()" style="width:auto; margin-right:8px;">
                                     <span style="font-weight:bold; color:var(--accent);">Ajouter une correspondance (Vol 2)</span>
                                 </label>
                             </div>
@@ -221,11 +236,6 @@
                     <div class="input-group"><label>Date Signature</label><input id="dateSignature" type="date"></div>
                 </div>
             </div>
-            
-            <div class="actions-bar center">
-                <button onclick="window.location.reload()" class="btn btn-outline"><i class="fas fa-rotate-right"></i> Réinitialiser tout</button>
-                <button onclick="openTab('tab-documents')" class="btn btn-blue">Suivant : Documents <i class="fas fa-arrow-right"></i></button>
-            </div>
         </div>
 
         <div id="tab-documents" class="tab-content fade-in hidden">
@@ -237,19 +247,19 @@
             <div class="modules-nav" style="margin-top:0;">
                 <h3><i class="fas fa-users"></i> Famille & Déclaration</h3>
                 <div class="actions-bar center">
-                    <button onclick="genererPouvoir()" class="btn btn-red"><i class="fas fa-file-signature"></i> Pouvoir</button>
-                    <button onclick="genererDeclaration()" class="btn btn-green"><i class="fas fa-file-medical"></i> Déclaration Décès</button>
+                    <button onclick="window.genererPouvoir()" class="btn btn-red"><i class="fas fa-file-signature"></i> Pouvoir</button>
+                    <button onclick="window.genererDeclaration()" class="btn btn-green"><i class="fas fa-file-medical"></i> Déclaration Décès</button>
                 </div>
             </div>
 
             <div class="modules-nav">
                 <h3><i class="fas fa-landmark"></i> Mairie & Préfecture</h3>
                 <div class="actions-bar center">
-                    <button onclick="genererDemandeInhumation()" id="btn_inhumation" class="btn btn-blue"><i class="fas fa-church"></i> Demande Inhumation</button>
-                    <button onclick="genererDemandeCremation()" id="btn_cremation" class="btn btn-purple hidden"><i class="fas fa-fire"></i> Demande Crémation</button>
-                    <button onclick="genererDemandeRapatriement()" id="btn_rapatriement" class="btn btn-blue hidden"><i class="fas fa-plane"></i> Rapatriement (Préf)</button>
-                    <button onclick="genererDemandeFermetureMairie()" class="btn btn-blue"><i class="fas fa-key"></i> Aut. Fermeture</button>
-                    <button onclick="genererDemandeOuverture()" class="btn btn-blue"><i class="fas fa-dungeon"></i> Ouv. Sépulture</button>
+                    <button onclick="window.genererDemandeInhumation()" id="btn_inhumation" class="btn btn-blue"><i class="fas fa-church"></i> Demande Inhumation</button>
+                    <button onclick="window.genererDemandeCremation()" id="btn_cremation" class="btn btn-purple hidden"><i class="fas fa-fire"></i> Demande Crémation</button>
+                    <button onclick="window.genererDemandeRapatriement()" id="btn_rapatriement" class="btn btn-blue hidden"><i class="fas fa-plane"></i> Rapatriement (Préf)</button>
+                    <button onclick="window.genererDemandeFermetureMairie()" class="btn btn-blue"><i class="fas fa-key"></i> Aut. Fermeture</button>
+                    <button onclick="window.genererDemandeOuverture()" class="btn btn-blue"><i class="fas fa-dungeon"></i> Ouv. Sépulture</button>
                 </div>
             </div>
         </div>
@@ -261,21 +271,54 @@
             </div>
 
             <div class="modules-buttons">
-                <button onclick="switchView('transport')" class="btn-module transport">
+                <button onclick="window.switchView('transport')" class="btn-module transport">
                     <i class="fas fa-ambulance"></i>
                     <span>Déclaration de Transport</span>
                 </button>
-                <button onclick="switchView('fermeture')" class="btn-module fermeture">
+                <button onclick="window.switchView('fermeture')" class="btn-module fermeture">
                     <i class="fas fa-box"></i>
                     <span>Procès-Verbal de Fermeture</span>
                 </button>
             </div>
         </div>
 
+        <div id="tab-base" class="tab-content fade-in hidden">
+            <div class="module-banner" style="background: linear-gradient(to right, #7c3aed, #6d28d9);">
+                <h2><i class="fas fa-database"></i> Base de Données Clients</h2>
+                <p style="opacity:0.9; font-size:0.9rem;">Retrouvez et modifiez tous les dossiers enregistrés.</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header"><i class="fas fa-search"></i> Recherche</div>
+                <div class="card-body">
+                    <div style="display:flex; gap:10px; margin-bottom:20px;">
+                        <input id="search-input" placeholder="Rechercher par nom..." onkeyup="window.rechercherDossier()">
+                        <button class="btn btn-blue" onclick="window.rechercherDossier()"><i class="fas fa-search"></i></button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="client-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom Défunt</th>
+                                    <th>Date Décès</th>
+                                    <th>Prestation</th>
+                                    <th>Créé le</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-list-body">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="section-transport" class="fade-in hidden">
             <div class="module-banner transport-banner">
                 <h2><i class="fas fa-ambulance"></i> Transport de Corps</h2>
-                <button onclick="openTab('tab-technique')" class="btn-back">← Retour Menu</button>
+                <button onclick="window.openTab('tab-technique')" class="btn-back">← Retour Menu</button>
             </div>
             <div class="card">
                 <div class="card-body grid-form">
@@ -301,13 +344,13 @@
                     <div class="input-group"><label>Le</label><input id="dateSignature_transport" type="date"></div>
                 </div>
             </div>
-            <div class="actions-bar center"><button onclick="genererTransport()" class="btn btn-purple big-btn">Générer PDF Transport</button></div>
+            <div class="actions-bar center"><button onclick="window.genererTransport()" class="btn btn-purple big-btn">Générer PDF Transport</button></div>
         </div>
 
         <div id="section-fermeture" class="fade-in hidden">
             <div class="module-banner fermeture-banner">
                 <h2><i class="fas fa-box"></i> PV Fermeture</h2>
-                <button onclick="openTab('tab-technique')" class="btn-back">← Retour Menu</button>
+                <button onclick="window.openTab('tab-technique')" class="btn-back">← Retour Menu</button>
             </div>
             <div class="card">
                 <div class="card-body grid-form">
@@ -319,12 +362,12 @@
                 <div class="card-header">Témoins</div>
                 <div class="card-body">
                     <div class="segment-control presence-toggle" style="margin-bottom:20px;">
-                        <label><input type="radio" name="type_presence" value="famille" onclick="togglePresence('famille')" checked><span>Famille Présente</span></label>
-                        <label><input type="radio" name="type_presence" value="police" onclick="togglePresence('police')"><span>Police (Absence Famille)</span></label>
+                        <label><input type="radio" name="type_presence" value="famille" onclick="window.togglePresence('famille')" checked><span>Famille Présente</span></label>
+                        <label><input type="radio" name="type_presence" value="police" onclick="window.togglePresence('police')"><span>Police (Absence Famille)</span></label>
                     </div>
                     
                     <div id="bloc_presence_famille" class="grid-form animated-bloc">
-                        <div class="span-2 text-right"><button type="button" class="btn-link" onclick="copierMandant()">Recopier Mandant</button></div>
+                        <div class="span-2 text-right"><button type="button" class="btn-link" onclick="window.copierMandant()">Recopier Mandant</button></div>
                         <div class="input-group span-2"><label>Nom & Prénom</label><input id="f_nom_prenom"></div>
                         <div class="input-group"><label>Lien</label><input id="f_lien"></div>
                         <div class="input-group"><label>Adresse</label><input id="f_adresse"></div>
@@ -337,10 +380,17 @@
                     </div>
                 </div>
             </div>
-            <div class="actions-bar center"><button onclick="genererFermeture()" class="btn btn-blue big-btn">Générer PV Fermeture</button></div>
+            <div class="card">
+                <div class="card-body grid-form">
+                     <div class="input-group"><label>Fait à</label><input id="faita_fermeture"></div>
+                     <div class="input-group"><label>Le</label><input id="dateSignature_fermeture" type="date"></div>
+                </div>
+            </div>
+            <div class="actions-bar center"><button onclick="window.genererFermeture()" class="btn btn-blue big-btn">Générer PV Fermeture</button></div>
         </div>
 
     </div>
-    <script src="script.js"></script>
+    
+    <script type="module" src="script.js"></script>
 </body>
 </html>

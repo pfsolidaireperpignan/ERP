@@ -1,5 +1,198 @@
 /* ==========================================================================
-   SECURITE & CONFIG
+   FIREBASE & CONFIGURATION
+   ========================================================================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// --- VOTRE CONFIGURATION (INTEGRÉE) ---
+const firebaseConfig = {
+    apiKey: "AIzaSyDmsIkTjW2IFkIks5BUAnxLLnc7pnj2e0w",
+    authDomain: "pf-solidaire.firebaseapp.com",
+    projectId: "pf-solidaire",
+    storageBucket: "pf-solidaire.firebasestorage.app",
+    messagingSenderId: "485465343242",
+    appId: "1:485465343242:web:46d2a49f851a95907b26f3",
+    measurementId: "G-TWLLXKF0K4"
+};
+
+// Initialisation
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Variables Globales
+let currentDocId = null;
+
+/* ==========================================================================
+   GESTION BASE DE DONNEES (CRUD)
+   ========================================================================== */
+
+// 1. SAUVEGARDER
+async function sauvegarderClient() {
+    const btn = document.querySelector('.btn-green');
+    // Vérification de sécurité si le bouton n'existe pas
+    if (!btn) return;
+    
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+    
+    try {
+        const data = {};
+        document.querySelectorAll('input, select').forEach(el => {
+            if(el.id) {
+                if(el.type === 'checkbox') data[el.id] = el.checked;
+                else if(el.type === 'radio') {
+                    if(el.checked) data[el.name] = el.value;
+                } else {
+                    data[el.id] = el.value;
+                }
+            }
+        });
+        
+        data.lastModified = new Date().toISOString();
+        if(!data.dateCreation) data.dateCreation = new Date().toISOString();
+
+        if (currentDocId) {
+            await updateDoc(doc(db, "dossiers_clients", currentDocId), data);
+            alert("Dossier mis à jour avec succès !");
+        } else {
+            const docRef = await addDoc(collection(db, "dossiers_clients"), data);
+            currentDocId = docRef.id;
+            alert("Nouveau dossier créé ! ID: " + docRef.id);
+        }
+        
+        const nomComplet = (data.nom || "Client") + " " + (data.prenom || "");
+        const labelClient = document.getElementById('current-client-name');
+        if(labelClient) labelClient.textContent = nomComplet;
+        
+    } catch (e) {
+        console.error("Erreur: ", e);
+        alert("Erreur lors de la sauvegarde : " + e.message);
+    }
+    btn.innerHTML = originalText;
+}
+
+// 2. RECHERCHER
+async function rechercherDossier() {
+    const searchInput = document.getElementById('search-input');
+    const tbody = document.getElementById('clients-list-body');
+    if (!searchInput || !tbody) return;
+
+    const searchVal = searchInput.value.toLowerCase();
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Chargement...</td></tr>';
+
+    try {
+        const q = query(collection(db, "dossiers_clients"), orderBy("lastModified", "desc"));
+        const querySnapshot = await getDocs(q);
+        
+        tbody.innerHTML = '';
+        let foundCount = 0;
+        
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const fullName = `${data.nom || ''} ${data.prenom || ''}`.toLowerCase();
+            
+            if (fullName.includes(searchVal)) {
+                foundCount++;
+                const tr = document.createElement('tr');
+                const dateDeces = data.date_deces ? data.date_deces.split('-').reverse().join('/') : '-';
+                const type = data.prestation || 'Inhumation';
+                let badgeClass = 'badge-inhumation';
+                if(type === 'Crémation') badgeClass = 'badge-cremation';
+                if(type === 'Rapatriement') badgeClass = 'badge-rapatriement';
+
+                tr.innerHTML = `
+                    <td style="font-weight:bold;">${data.nom || ''} ${data.prenom || ''}</td>
+                    <td>${dateDeces}</td>
+                    <td><span class="badge ${badgeClass}">${type}</span></td>
+                    <td style="font-size:0.8rem;">${new Date(data.lastModified).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn-outline" style="padding:5px 10px;" onclick="window.chargerDossier('${doc.id}')">
+                            <i class="fas fa-folder-open"></i> Ouvrir
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        });
+
+        if(foundCount === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Aucun dossier trouvé.</td></tr>';
+        }
+
+    } catch (e) {
+        console.error("Erreur lecture: ", e);
+        tbody.innerHTML = `<tr><td colspan="5" style="color:red;">Erreur de connexion : ${e.message}</td></tr>`;
+    }
+}
+
+// 3. CHARGER
+async function chargerDossier(id) {
+    try {
+        const docRef = doc(db, "dossiers_clients", id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            currentDocId = id;
+            
+            for (const [key, value] of Object.entries(data)) {
+                const el = document.getElementById(key);
+                if (el) {
+                    if(el.type === 'checkbox') el.checked = value;
+                    else el.value = value;
+                } else {
+                    const radios = document.getElementsByName(key);
+                    if(radios.length > 0) {
+                        radios.forEach(r => { if(r.value === value) r.checked = true; });
+                    }
+                }
+            }
+
+            window.toggleCeremonie();
+            window.toggleConjoint();
+            window.toggleProf(data.prof_type === 'autre');
+            window.toggleVol2();
+            
+            const labelClient = document.getElementById('current-client-name');
+            if(labelClient) labelClient.textContent = (data.nom || "") + " " + (data.prenom || "");
+            
+            window.openTab('tab-dossier');
+            // Petit délai pour laisser l'interface se mettre à jour
+            setTimeout(() => alert("Dossier chargé !"), 100);
+        } else {
+            alert("Ce dossier n'existe plus.");
+        }
+    } catch (e) {
+        console.error("Erreur chargement: ", e);
+        alert("Erreur lors du chargement du dossier.");
+    }
+}
+
+function resetDossier() {
+    if(confirm("Voulez-vous vider le formulaire pour un nouveau client ?")) {
+        currentDocId = null;
+        document.querySelectorAll('input').forEach(i => i.value = '');
+        document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
+        
+        const faita = document.getElementById('faita');
+        if(faita) faita.value = "Perpignan";
+        
+        const labelClient = document.getElementById('current-client-name');
+        if(labelClient) labelClient.textContent = "Nouveau (Non enregistré)";
+        
+        // On re-initialise les dates du jour
+        const today = new Date().toISOString().split('T')[0];
+        ['dateSignature', 'date_fermeture', 'date_inhumation', 'date_cremation'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.value = today;
+        });
+        
+        window.openTab('tab-dossier');
+    }
+}
+
+/* ==========================================================================
+   FONCTIONS GLOBALES (NON-MODULE)
    ========================================================================== */
 const PASSWORD_ACCES = "PF2026"; 
 
@@ -16,19 +209,6 @@ function checkPassword() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('password-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') checkPassword();
-    });
-    if (sessionStorage.getItem('isLoggedIn') === 'true') {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-content').classList.remove('hidden');
-    }
-});
-
-/* ==========================================================================
-   LOGIQUE ONGLETS & NAVIGATION
-   ========================================================================== */
 function openTab(tabName) {
     const contents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < contents.length; i++) {
@@ -48,36 +228,53 @@ function openTab(tabName) {
     let index = 0;
     if(tabName === 'tab-documents') index = 1;
     if(tabName === 'tab-technique') index = 2;
-    tabs[index].classList.add("active");
+    if(tabName === 'tab-base') index = 3;
+    if(tabs[index]) tabs[index].classList.add("active");
 
     if(tabName === 'tab-technique') {
-        document.getElementById('section-transport').classList.add('hidden');
-        document.getElementById('section-fermeture').classList.add('hidden');
+        const trans = document.getElementById('section-transport');
+        const ferm = document.getElementById('section-fermeture');
+        if(trans) trans.classList.add('hidden');
+        if(ferm) ferm.classList.add('hidden');
     }
 }
 
 function switchView(viewName) {
-    document.getElementById('section-transport').classList.add('hidden');
-    document.getElementById('section-fermeture').classList.add('hidden');
+    const trans = document.getElementById('section-transport');
+    const ferm = document.getElementById('section-fermeture');
+    if(trans) trans.classList.add('hidden');
+    if(ferm) ferm.classList.add('hidden');
 
     if (viewName === 'transport') {
-        document.getElementById('section-transport').classList.remove('hidden');
-        if(!v("faita_transport")) document.getElementById('faita_transport').value = v("faita");
-        if(!v("dateSignature_transport")) document.getElementById('dateSignature_transport').value = v("dateSignature");
-        if(!v("lieu_depart_t")) document.getElementById('lieu_depart_t').value = v("lieu_deces"); 
+        if(trans) trans.classList.remove('hidden');
+        if(!v("faita_transport")) {
+            const el = document.getElementById('faita_transport');
+            if(el) el.value = v("faita");
+        }
+        if(!v("dateSignature_transport")) {
+            const el = document.getElementById('dateSignature_transport');
+            if(el) el.value = v("dateSignature");
+        }
+        if(!v("lieu_depart_t")) {
+            const el = document.getElementById('lieu_depart_t');
+            if(el) el.value = v("lieu_deces");
+        }
     } else if (viewName === 'fermeture') {
-        document.getElementById('section-fermeture').classList.remove('hidden');
-        if(!v("faita_fermeture")) document.getElementById('faita_fermeture').value = v("faita");
-        if(!v("dateSignature_fermeture")) document.getElementById('dateSignature_fermeture').value = v("dateSignature");
+        if(ferm) ferm.classList.remove('hidden');
+        if(!v("faita_fermeture")) {
+            const el = document.getElementById('faita_fermeture');
+            if(el) el.value = v("faita");
+        }
+        if(!v("dateSignature_fermeture")) {
+            const el = document.getElementById('dateSignature_fermeture');
+            if(el) el.value = v("dateSignature");
+        }
         togglePresence('famille');
     } else if (viewName === 'main') {
         openTab('tab-dossier');
     }
 }
 
-/* ==========================================================================
-   HELPERS & LOGIQUE METIER
-   ========================================================================== */
 const v = (id) => { const el = document.getElementById(id); return el ? el.value : ""; };
 const formatD = (d) => d ? d.split("-").reverse().join("/") : ".................";
 let logoBase64 = null;
@@ -86,46 +283,48 @@ window.onload = () => {
     if(document.getElementById('faita')) document.getElementById('faita').value = "Perpignan";
     const today = new Date().toISOString().split('T')[0];
     ['dateSignature', 'date_fermeture', 'date_inhumation', 'date_cremation'].forEach(id => {
-        if(document.getElementById(id)) document.getElementById(id).value = today;
+        const el = document.getElementById(id);
+        if(el) el.value = today;
     });
     setTimeout(chargerLogoBase64, 500);
     toggleCeremonie();
 };
 
 function toggleCeremonie() {
-    const type = document.getElementById('prestation').value;
+    const el = document.getElementById('prestation');
+    if(!el) return;
+    const type = el.value;
     const blocInhu = document.getElementById('bloc_inhumation');
     const blocCrema = document.getElementById('bloc_cremation');
     const blocRap = document.getElementById('bloc_rapatriement');
-
     const btnInhu = document.getElementById('btn_inhumation');
     const btnCrema = document.getElementById('btn_cremation');
     const btnRap = document.getElementById('btn_rapatriement');
 
-    [blocInhu, blocCrema, blocRap].forEach(b => b.classList.add('hidden'));
-    [btnInhu, btnCrema, btnRap].forEach(b => b.classList.add('hidden'));
+    [blocInhu, blocCrema, blocRap].forEach(b => b && b.classList.add('hidden'));
+    [btnInhu, btnCrema, btnRap].forEach(b => b && b.classList.add('hidden'));
 
     if (type === "Crémation") {
-        blocCrema.classList.remove('hidden'); blocCrema.classList.add('fade-in');
-        btnCrema.classList.remove('hidden');
+        if(blocCrema) { blocCrema.classList.remove('hidden'); blocCrema.classList.add('fade-in'); }
+        if(btnCrema) btnCrema.classList.remove('hidden');
     } else if (type === "Rapatriement") {
-        blocRap.classList.remove('hidden'); blocRap.classList.add('fade-in');
-        btnRap.classList.remove('hidden');
+        if(blocRap) { blocRap.classList.remove('hidden'); blocRap.classList.add('fade-in'); }
+        if(btnRap) btnRap.classList.remove('hidden');
     } else {
-        blocInhu.classList.remove('hidden'); blocInhu.classList.add('fade-in');
-        btnInhu.classList.remove('hidden');
+        if(blocInhu) { blocInhu.classList.remove('hidden'); blocInhu.classList.add('fade-in'); }
+        if(btnInhu) btnInhu.classList.remove('hidden');
     }
 }
 
 function toggleVol2() {
     const chk = document.getElementById('check_vol2');
     const bloc = document.getElementById('bloc_vol2');
-    if(chk.checked) {
-        bloc.classList.remove('hidden');
-        bloc.classList.add('fade-in');
-    } else {
-        bloc.classList.add('hidden');
-        bloc.classList.remove('fade-in');
+    if(chk && bloc) {
+        if(chk.checked) {
+            bloc.classList.remove('hidden'); bloc.classList.add('fade-in');
+        } else {
+            bloc.classList.add('hidden'); bloc.classList.remove('fade-in');
+        }
     }
 }
 
@@ -152,29 +351,6 @@ function ajouterFiligrane(pdf) {
     }
 }
 
-function toggleProf(isAutre) { 
-    document.getElementById('profession_autre').disabled = !isAutre; 
-    if(!isAutre) document.getElementById('profession_autre').value = "";
-}
-function toggleConjoint() {
-    const sit = document.getElementById("matrimoniale").value;
-    document.getElementById("conjoint").disabled = !["Marié(e)", "Veuf(ve)", "Divorcé(e)"].includes(sit);
-}
-function togglePresence(type) {
-    const fam = document.getElementById('bloc_presence_famille');
-    const pol = document.getElementById('bloc_presence_police');
-    if (type === 'famille') { fam.classList.remove('hidden'); pol.classList.add('hidden'); } 
-    else { fam.classList.add('hidden'); pol.classList.remove('hidden'); }
-}
-function copierMandant() {
-    if(v("soussigne")) document.getElementById('f_nom_prenom').value = v("soussigne");
-    if(v("lien")) document.getElementById('f_lien').value = v("lien");
-    if(v("demeurant")) document.getElementById('f_adresse').value = v("demeurant");
-}
-
-/* ==========================================================================
-   GENERATION PDF
-   ========================================================================== */
 function headerPF(pdf, yPos = 20) {
     pdf.setFont("helvetica", "bold"); pdf.setTextColor(34, 155, 76); pdf.setFontSize(12);
     pdf.text("POMPES FUNEBRES SOLIDAIRE PERPIGNAN", 105, yPos, { align: "center" });
@@ -185,7 +361,36 @@ function headerPF(pdf, yPos = 20) {
     pdf.line(40, yPos + 12, 170, yPos + 12);
 }
 
-// 1. POUVOIR (Avec En-tête)
+function toggleProf(isAutre) { 
+    const el = document.getElementById('profession_autre');
+    if(el) {
+        el.disabled = !isAutre; 
+        if(!isAutre) el.value = "";
+    }
+}
+function toggleConjoint() {
+    const sit = document.getElementById("matrimoniale");
+    const conj = document.getElementById("conjoint");
+    if(sit && conj) {
+        conj.disabled = !["Marié(e)", "Veuf(ve)", "Divorcé(e)"].includes(sit.value);
+    }
+}
+function togglePresence(type) {
+    const fam = document.getElementById('bloc_presence_famille');
+    const pol = document.getElementById('bloc_presence_police');
+    if(fam && pol) {
+        if (type === 'famille') { fam.classList.remove('hidden'); pol.classList.add('hidden'); } 
+        else { fam.classList.add('hidden'); pol.classList.remove('hidden'); }
+    }
+}
+function copierMandant() {
+    if(v("soussigne")) document.getElementById('f_nom_prenom').value = v("soussigne");
+    if(v("lien")) document.getElementById('f_lien').value = v("lien");
+    if(v("demeurant")) document.getElementById('f_adresse').value = v("demeurant");
+}
+
+/* --- GENERATION PDF --- */
+
 function genererPouvoir() {
     if(!logoBase64) chargerLogoBase64();
     const { jsPDF } = window.jspdf; const pdf = new jsPDF();
@@ -226,7 +431,6 @@ function genererPouvoir() {
     pdf.save(`Pouvoir_${v("nom")}.pdf`);
 }
 
-// 2. DECLARATION DE DECES (SANS En-tête)
 function genererDeclaration() {
     const { jsPDF } = window.jspdf; const pdf = new jsPDF();
     const fontMain = "times";
@@ -255,9 +459,16 @@ function genererDeclaration() {
     drawLine("A : ", v("lieu_naiss"), y); y+=14;
     pdf.setFont(fontMain, "bold"); pdf.text("DATE ET LIEU DU DECES LE", margin, y);
     pdf.setFont(fontMain, "normal"); let dots = margin + 65; while(dots < 115) { pdf.text(".", dots, y); dots+=2; }
-    if(v("date_deces")) { pdf.setFont(fontMain, "bold"); pdf.rect(margin+66, y-4, 25, 5, 'F'); pdf.text(formatD(v("date_deces")), margin+67, y); }
+    if(v("date_deces")) { 
+        pdf.setFont(fontMain, "bold"); pdf.setFillColor(255, 255, 255); 
+        pdf.rect(margin+66, y-4, 25, 5, 'F'); 
+        pdf.text(formatD(v("date_deces")), margin+67, y); 
+    }
     pdf.setFont(fontMain, "bold"); pdf.text("A", 120, y); dots = 125; while(dots < 190) { pdf.text(".", dots, y); dots+=2; }
-    if(v("lieu_deces")) { pdf.rect(126, y-4, 60, 5, 'F'); pdf.text(v("lieu_deces").toUpperCase(), 127, y); }
+    if(v("lieu_deces")) { 
+        pdf.setFillColor(255, 255, 255); pdf.rect(126, y-4, 60, 5, 'F'); 
+        pdf.text(v("lieu_deces").toUpperCase(), 127, y); 
+    }
     y += 6; pdf.setFont(fontMain, "bold"); pdf.text("(en son domicile, en clinique, à l'hôpital", margin, y);
     pdf.line(margin, y+1, margin + 75, y+1); pdf.text(")", margin + 75, y); y += 18;
     pdf.text("PROFESSION : ", margin, y); y+=8;
@@ -277,7 +488,6 @@ function genererDeclaration() {
     pdf.save(`Declaration_Deces_${v("nom")}.pdf`);
 }
 
-// 3. DEMANDE D'INHUMATION (Avec En-tête)
 function genererDemandeInhumation() {
     if(!logoBase64) chargerLogoBase64();
     const { jsPDF } = window.jspdf; const pdf = new jsPDF();
@@ -301,7 +511,6 @@ function genererDemandeInhumation() {
     pdf.save(`Demande_Inhumation_${v("nom")}.pdf`);
 }
 
-// 4. DEMANDE DE CREMATION (Avec En-tête)
 function genererDemandeCremation() {
     const { jsPDF } = window.jspdf; const pdf = new jsPDF();
     headerPF(pdf);
@@ -331,14 +540,12 @@ Je certifie que le défunt n'était pas porteur d'un stimulateur cardiaque.`;
     pdf.save(`Demande_Cremation_${v("nom")}.pdf`);
 }
 
-// 5. RAPATRIEMENT (TITRE GÉNÉRALISÉ CENTRÉ - PAS DE LOGO, PAS D'EN-TÊTE)
 function genererDemandeRapatriement() {
     const { jsPDF } = window.jspdf; const pdf = new jsPDF();
-    // PAS DE FILIGRANE NI EN-TETE
+    // PAS DE FILIGRANE NI HEADER PF ICI
 
     // --- TITRE GÉNÉRALISÉ CENTRÉ ---
     pdf.setDrawColor(0); pdf.setLineWidth(0.5); pdf.setFillColor(240, 240, 240);
-    // Cadre centré (largeur page 210, cadre 180, marge gauche 15)
     pdf.rect(15, 20, 180, 20, 'FD');
 
     pdf.setTextColor(0); pdf.setFont("helvetica", "bold"); pdf.setFontSize(14);
@@ -410,7 +617,6 @@ function genererDemandeRapatriement() {
     pdf.save(`Demande_Rapatriement_Prefecture_${v("nom")}.pdf`);
 }
 
-// 6. DEMANDE DE FERMETURE (Avec En-tête)
 function genererDemandeFermetureMairie() {
     const { jsPDF } = window.jspdf; const pdf = new jsPDF();
     pdf.setDrawColor(26, 90, 143); pdf.setLineWidth(1.5); pdf.rect(10, 10, 190, 277);
@@ -440,7 +646,6 @@ function genererDemandeFermetureMairie() {
     pdf.save(`Demande_Fermeture_${v("nom")}.pdf`);
 }
 
-// 7. OUVERTURE SEPULTURE (Avec En-tête)
 function genererDemandeOuverture() {
     const { jsPDF } = window.jspdf; const pdf = new jsPDF();
     const type = v("prestation");
@@ -500,7 +705,6 @@ function genererDemandeOuverture() {
     pdf.save(`Ouverture_Sepulture_${v("nom")}.pdf`);
 }
 
-// 8. PV FERMETURE (Avec En-tête)
 function genererFermeture() {
     if(!logoBase64) chargerLogoBase64();
     const { jsPDF } = window.jspdf; const pdf = new jsPDF();
@@ -548,7 +752,6 @@ function genererFermeture() {
     pdf.save(`PV_Fermeture_${v("nom")}.pdf`);
 }
 
-// 9. TRANSPORT (Avec En-tête)
 function genererTransport() {
     if(!logoBase64) chargerLogoBase64();
     const { jsPDF } = window.jspdf; const pdf = new jsPDF();
@@ -586,3 +789,27 @@ function genererTransport() {
     pdf.text("Cachet de l'entreprise :", 120, y+10);
     pdf.save(`Transport_${v("nom")}.pdf`);
 }
+
+window.checkPassword = checkPassword;
+window.openTab = openTab;
+window.switchView = switchView;
+window.toggleCeremonie = toggleCeremonie;
+window.toggleVol2 = toggleVol2;
+window.toggleProf = toggleProf;
+window.toggleConjoint = toggleConjoint;
+window.togglePresence = togglePresence;
+window.copierMandant = copierMandant;
+window.genererPouvoir = genererPouvoir;
+window.genererDeclaration = genererDeclaration;
+window.genererDemandeInhumation = genererDemandeInhumation;
+window.genererDemandeCremation = genererDemandeCremation;
+window.genererDemandeRapatriement = genererDemandeRapatriement;
+window.genererDemandeFermetureMairie = genererDemandeFermetureMairie;
+window.genererDemandeOuverture = genererDemandeOuverture;
+window.genererFermeture = genererFermeture;
+window.genererTransport = genererTransport;
+window.chargerLogoBase64 = chargerLogoBase64;
+window.sauvegarderClient = sauvegarderClient;
+window.rechercherDossier = rechercherDossier;
+window.chargerDossier = chargerDossier;
+window.resetDossier = resetDossier;
