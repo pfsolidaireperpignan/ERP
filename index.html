@@ -6,7 +6,7 @@
     <title>PF Solidaire - Espace Pro</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <img id="logo-source" src="Logo.png" style="display: none;" crossorigin="anonymous">
@@ -14,47 +14,49 @@
     <div id="login-screen">
         <div class="login-box">
             <img src="Logo.png" alt="Logo" class="login-logo">
-            <h2 class="login-title">Accès Réservé</h2>
+            <h2 class="login-title">Espace Pro</h2>
             <div class="input-group">
-                <div class="password-wrapper">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="password-input" placeholder="Mot de passe...">
-                </div>
+                <input type="password" id="password-input" placeholder="Code d'accès...">
             </div>
-            <button onclick="checkPassword()" class="btn btn-blue btn-login">
-                Se connecter <i class="fas fa-arrow-right"></i>
+            <button onclick="checkPassword()" class="btn-login">
+                Connexion <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
             </button>
-            <p id="login-error" class="error-msg">
-                <i class="fas fa-exclamation-triangle"></i> Mot de passe incorrect
+            <p id="login-error" class="error-msg" style="display:none; color:#ef4444; margin-top:10px;">
+                <i class="fas fa-exclamation-circle"></i> Mot de passe incorrect
             </p>
         </div>
     </div>
 
     <div id="app-content" class="main-wrapper hidden">
+        
         <header>
             <div class="header-container">
                 <div class="logo-wrapper">
                     <img src="Logo.png" alt="PF Solidaire" class="main-logo">
                 </div>
                 <div class="text-area">
-                    <h1 class="brand-title">POMPES FUNÈBRES <span class="text-red">SOLIDAIRE</span></h1>
-                    <p class="brand-subtitle">Mustapha CHERKAOUI - Perpignan & Thuir</p>
+                    <h1 class="brand-title">PF <span style="color:var(--accent);">SOLIDAIRE</span></h1>
+                    <p class="brand-subtitle">Gestion Administrative - M. CHERKAOUI</p>
                 </div>
-            </div>
-            
-            <div class="stepper">
-                <span class="step active">Dossier</span>
-                <span class="step-arrow">→</span>
-                <span class="step">Demandes Mairie</span>
-                <span class="step-arrow">→</span>
-                <span class="step">Modules Techniques</span>
             </div>
         </header>
 
-        <div id="section-main" class="fade-in">
+        <nav class="tab-navigation">
+            <button class="tab-btn active" onclick="openTab('tab-dossier')">
+                <i class="fas fa-folder-open"></i> 1. Dossier
+            </button>
+            <button class="tab-btn" onclick="openTab('tab-documents')">
+                <i class="fas fa-print"></i> 2. Documents & Demandes
+            </button>
+            <button class="tab-btn" onclick="openTab('tab-technique')">
+                <i class="fas fa-cogs"></i> 3. Technique
+            </button>
+        </nav>
+
+        <div id="tab-dossier" class="tab-content fade-in active">
             
             <div class="card">
-                <div class="card-header"><i class="fas fa-user-pen"></i> Informations du Mandant (Famille)</div>
+                <div class="card-header"><i class="fas fa-user-pen"></i> Mandant (Famille)</div>
                 <div class="card-body grid-form">
                     <div class="input-group span-2">
                         <label>Je soussigné(e)</label>
@@ -62,7 +64,7 @@
                     </div>
                     <div class="input-group span-2">
                         <label>Demeurant à</label>
-                        <input id="demeurant" placeholder="Adresse complète (Rue, CP, Ville)">
+                        <input id="demeurant" placeholder="Adresse complète">
                     </div>
                     <div class="input-group">
                         <label>Lien de parenté</label>
@@ -76,24 +78,27 @@
             </div>
 
             <div class="card">
-                <div class="card-header"><i class="fas fa-user-clock"></i> Informations du Défunt</div>
+                <div class="card-header"><i class="fas fa-user-clock"></i> Défunt</div>
                 <div class="card-body grid-form">
                     <div class="input-group"><label>Nom d'usage</label><input id="nom" placeholder="NOM"></div>
                     <div class="input-group"><label>Nom de jeune fille</label><input id="nom_jeune_fille" placeholder="Facultatif"></div>
                     <div class="input-group"><label>Prénoms</label><input id="prenom" placeholder="Prénoms"></div>
+                    
                     <div class="input-group"><label>Sexe</label>
-                        <select id="sexe"><option value="Masculin">Masculin</option><option value="Féminin">Féminin</option></select>
+                        <div class="segment-control">
+                            <label><input type="radio" name="sexe" value="Masculin" checked><span>Homme</span></label>
+                            <label><input type="radio" name="sexe" value="Féminin"><span>Femme</span></label>
+                        </div>
                     </div>
                     
                     <div class="input-group"><label>Né(e) le</label><input id="date_naiss" type="date"></div>
                     <div class="input-group"><label>À (Ville, Pays)</label><input list="villes-monde" id="lieu_naiss"></div>
-                    
                     <div class="input-group"><label>Décédé(e) le</label><input id="date_deces" type="date"></div>
                     <div class="input-group"><label>À (Ville)</label><input list="villes-monde" id="lieu_deces"></div>
 
                     <datalist id="villes-monde">
-                        <option value="Perpignan (France)"><option value="Thuir (France)"><option value="Paris (France)"><option value="Marseille (France)">
-                        <option value="Casablanca (Maroc)"><option value="Rabat (Maroc)"><option value="Alger (Algérie)"><option value="Oran (Algérie)">
+                        <option value="Perpignan (France)"><option value="Thuir (France)"><option value="Paris (France)">
+                        <option value="Casablanca (Maroc)"><option value="Rabat (Maroc)"><option value="Aklim Berkane (Maroc)">
                     </datalist>
 
                     <div class="input-group span-2"><label>Dernier Domicile</label><input id="adresse_fr" placeholder="Adresse complète du défunt"></div>
@@ -126,13 +131,12 @@
                 </div>
             </div>
 
-            <div class="card" style="border-left: 5px solid var(--purple);">
-                <div class="card-header"><i class="fas fa-church"></i> Détails Cérémonie & Lieux</div>
+            <div class="card" style="border-left: 4px solid var(--accent);">
+                <div class="card-header"><i class="fas fa-church"></i> Cérémonie & Technique</div>
                 <div class="card-body grid-form">
-                    
                     <div class="input-group span-2 highlight-box">
                         <label>Type d'opération principale</label>
-                        <select id="prestation">
+                        <select id="prestation" onchange="toggleCeremonie()" style="font-weight:bold; color:var(--primary-dark);">
                             <option value="Inhumation" selected>Inhumation</option>
                             <option value="Crémation">Crémation</option>
                             <option value="Exhumation">Exhumation</option>
@@ -140,127 +144,159 @@
                         </select>
                     </div>
 
-                    <div class="divider span-2"><span>Infos Cimetière / Inhumation</span></div>
-                    
-                    <div class="input-group span-2">
-                        <label>Nom du Cimetière</label>
-                        <input id="cimetiere_nom" placeholder="ex: Cimetière de l'Ouest, Perpignan">
-                    </div>
-                    <div class="input-group">
-                        <label>Date Inhumation</label>
-                        <input id="date_inhumation" type="date">
-                    </div>
-                    <div class="input-group">
-                        <label>Heure</label>
-                        <input id="heure_inhumation" type="time">
-                    </div>
-                    <div class="input-group">
-                        <label>N° Concession</label>
-                        <input id="num_concession" placeholder="Si connu">
-                    </div>
-                    <div class="input-group">
-                        <label>Type Sépulture</label>
-                        <select id="type_sepulture">
-                            <option value="Caveau">Caveau</option>
-                            <option value="Pleine terre">Pleine terre</option>
-                            <option value="Case de columbarium">Case de columbarium</option>
-                            <option value="Cavurne">Cavurne</option>
-                        </select>
+                    <div id="bloc_inhumation" class="span-2 grid-form" style="margin:0; padding:0; gap:20px;">
+                        <div class="divider span-2"><span>Infos Cimetière</span></div>
+                        <div class="input-group span-2"><label>Nom du Cimetière</label><input id="cimetiere_nom"></div>
+                        <div class="input-group"><label>Date Opération</label><input id="date_inhumation" type="date"></div>
+                        <div class="input-group"><label>Heure</label><input id="heure_inhumation" type="time"></div>
+                        <div class="input-group"><label>N° Concession</label><input id="num_concession"></div>
+                        <div class="input-group"><label>Titulaire Concession</label><input id="titulaire_concession" placeholder="ex: Mme DUPONT"></div>
+                        <div class="input-group"><label>Type Sépulture</label>
+                            <select id="type_sepulture">
+                                <option value="Caveau">Caveau</option>
+                                <option value="Pleine terre">Pleine terre</option>
+                                <option value="Cavurne">Cavurne</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="divider span-2"><span>Infos Crématorium</span></div>
+                    <div id="bloc_cremation" class="span-2 grid-form hidden" style="margin:0; padding:0; gap:20px;">
+                        <div class="divider span-2"><span>Infos Crématorium</span></div>
+                        <div class="input-group span-2"><label>Crématorium</label><input id="crematorium_nom"></div>
+                        <div class="input-group"><label>Date Crémation</label><input id="date_cremation" type="date"></div>
+                        <div class="input-group"><label>Destination Cendres</label><input id="destination_cendres"></div>
+                    </div>
 
-                    <div class="input-group span-2">
-                        <label>Nom du Crématorium</label>
-                        <input id="crematorium_nom" placeholder="ex: Crématorium de Canet-en-Roussillon">
-                    </div>
-                    <div class="input-group">
-                        <label>Date Crémation</label>
-                        <input id="date_cremation" type="date">
-                    </div>
-                    <div class="input-group">
-                        <label>Destination des Cendres</label>
-                        <input id="destination_cendres" placeholder="ex: Dispersées au jardin du souvenir">
+                    <div id="bloc_rapatriement" class="span-2 grid-form hidden" style="margin:0; padding:0; gap:20px;">
+                        <div class="divider span-2"><span style="color:var(--accent);">Infos Rapatriement</span></div>
+                        <div class="input-group"><label>Pays Destination</label><input id="rap_pays" placeholder="ex: MAROC"></div>
+                        <div class="input-group"><label>Ville Inhumation</label><input id="rap_ville" placeholder="ex: Aklim Berkane"></div>
+
+                        <div class="input-group span-2" style="background:#f1f5f9; padding:10px; border-radius:8px;">
+                            <label style="color:#1e293b; font-weight:bold;">1. Partie Routière</label>
+                            <div class="grid-form">
+                                <div class="input-group"><label>Véhicule Immat.</label><input id="rap_immat" value="DA-081-ZQ"></div>
+                                <div class="input-group"><label>Ville Départ</label><input id="rap_ville_dep" value="Perpignan"></div>
+                                <div class="input-group"><label>Ville Arrivée (Aéroport)</label><input id="rap_ville_arr" value="Toulouse"></div>
+                                <div class="input-group"><label>Date/Heure Départ</label><input id="rap_date_dep_route" placeholder="ex: 24/12 à 10h00"></div>
+                            </div>
+                        </div>
+
+                        <div class="input-group span-2" style="background:#f1f5f9; padding:10px; border-radius:8px;">
+                            <label style="color:#1e293b; font-weight:bold;">2. Partie Aérienne</label>
+                            <div class="input-group" style="margin-bottom:10px;"><label>N° LTA</label><input id="rap_lta" placeholder="ex: 147-93605046"></div>
+                            
+                            <label style="font-size:0.75rem; color:#64748b;">VOL 1 (Principal)</label>
+                            <div class="grid-form" style="margin-bottom:10px;">
+                                <div class="input-group"><label>N° Vol</label><input id="vol1_num"></div>
+                                <div class="input-group"><label>Aéroport Départ</label><input id="vol1_dep_aero"></div>
+                                <div class="input-group"><label>Décollage</label><input id="vol1_dep_time"></div>
+                                <div class="input-group"><label>Aéroport Arrivée</label><input id="vol1_arr_aero"></div>
+                                <div class="input-group"><label>Atterrissage</label><input id="vol1_arr_time"></div>
+                            </div>
+
+                            <div class="input-group span-2">
+                                <label style="display:flex; align-items:center; cursor:pointer;">
+                                    <input type="checkbox" id="check_vol2" onclick="toggleVol2()" style="width:auto; margin-right:8px;">
+                                    <span style="font-weight:bold; color:var(--accent);">Ajouter une correspondance (Vol 2)</span>
+                                </label>
+                            </div>
+
+                            <div id="bloc_vol2" class="grid-form hidden">
+                                <label class="span-2" style="font-size:0.75rem; color:#64748b;">VOL 2 (Correspondance)</label>
+                                <div class="input-group"><label>N° Vol</label><input id="vol2_num"></div>
+                                <div class="input-group"><label>Aéroport Départ</label><input id="vol2_dep_aero"></div>
+                                <div class="input-group"><label>Décollage</label><input id="vol2_dep_time"></div>
+                                <div class="input-group"><label>Aéroport Arrivée</label><input id="vol2_arr_aero"></div>
+                                <div class="input-group"><label>Atterrissage</label><input id="vol2_arr_time"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-header"><i class="fas fa-signature"></i> Signature Dossier</div>
                 <div class="card-body grid-form">
                     <div class="input-group"><label>Fait à</label><input id="faita"></div>
-                    <div class="input-group"><label>Date du document</label><input id="dateSignature" type="date"></div>
+                    <div class="input-group"><label>Date Signature</label><input id="dateSignature" type="date"></div>
+                </div>
+            </div>
+            
+            <div class="actions-bar center">
+                <button onclick="window.location.reload()" class="btn btn-outline"><i class="fas fa-rotate-right"></i> Réinitialiser tout</button>
+                <button onclick="openTab('tab-documents')" class="btn btn-blue">Suivant : Documents <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <div id="tab-documents" class="tab-content fade-in hidden">
+            <div class="module-banner" style="background: linear-gradient(to right, #0f766e, #115e59);">
+                <h2><i class="fas fa-print"></i> Centre d'impression</h2>
+                <p style="opacity:0.9; font-size:0.9rem;">Générez les documents officiels basés sur les données du dossier.</p>
+            </div>
+
+            <div class="modules-nav" style="margin-top:0;">
+                <h3><i class="fas fa-users"></i> Famille & Déclaration</h3>
+                <div class="actions-bar center">
+                    <button onclick="genererPouvoir()" class="btn btn-red"><i class="fas fa-file-signature"></i> Pouvoir</button>
+                    <button onclick="genererDeclaration()" class="btn btn-green"><i class="fas fa-file-medical"></i> Déclaration Décès</button>
                 </div>
             </div>
 
             <div class="modules-nav">
-                <h3><i class="fas fa-file-contract"></i> Documents Famille & Déclaration</h3>
+                <h3><i class="fas fa-landmark"></i> Mairie & Préfecture</h3>
                 <div class="actions-bar center">
-                    <button onclick="window.location.reload()" class="btn btn-outline">Nouveau</button>
-                    <button onclick="genererPouvoir()" class="btn btn-red">Pouvoir</button>
-                    <button onclick="genererDeclaration()" class="btn btn-green">Déclaration Décès</button>
-                    <button onclick="genererDemandeCremation()" class="btn btn-purple">
-                        <i class="fas fa-fire"></i> Demande Crémation
-                    </button>
+                    <button onclick="genererDemandeInhumation()" id="btn_inhumation" class="btn btn-blue"><i class="fas fa-church"></i> Demande Inhumation</button>
+                    <button onclick="genererDemandeCremation()" id="btn_cremation" class="btn btn-purple hidden"><i class="fas fa-fire"></i> Demande Crémation</button>
+                    <button onclick="genererDemandeRapatriement()" id="btn_rapatriement" class="btn btn-blue hidden"><i class="fas fa-plane"></i> Rapatriement (Préf)</button>
+                    <button onclick="genererDemandeFermetureMairie()" class="btn btn-blue"><i class="fas fa-key"></i> Aut. Fermeture</button>
+                    <button onclick="genererDemandeOuverture()" class="btn btn-blue"><i class="fas fa-dungeon"></i> Ouv. Sépulture</button>
                 </div>
             </div>
+        </div>
 
-            <div class="modules-nav" style="margin-top: 20px; border-color: #3498db;">
-                <h3><i class="fas fa-landmark"></i> Demandes Mairie / Préfecture (Signé PF)</h3>
-                <div class="actions-bar center">
-                    <button onclick="genererDemandeInhumation()" class="btn btn-blue">
-                        <i class="fas fa-church"></i> Demande Inhumation
-                    </button>
-                    <button onclick="genererDemandeFermetureMairie()" class="btn btn-blue">
-                        <i class="fas fa-key"></i> Aut. Fermeture
-                    </button>
-                    <button onclick="genererDemandeOuverture()" class="btn btn-blue">
-                        <i class="fas fa-dungeon"></i> Ouv. Sépulture
-                    </button>
-                </div>
+        <div id="tab-technique" class="tab-content fade-in hidden">
+            <div class="module-banner" style="background: linear-gradient(to right, #4338ca, #3730a3);">
+                <h2><i class="fas fa-cogs"></i> Modules Techniques</h2>
+                <p style="opacity:0.9; font-size:0.9rem;">Documents spécifiques pour le transport et la fermeture.</p>
             </div>
 
-            <div class="modules-nav">
-                <h3>Modules Techniques</h3>
-                <div class="modules-buttons">
-                    <button onclick="switchView('transport')" class="btn-module transport">
-                        <i class="fas fa-ambulance"></i> Transport
-                    </button>
-                    <button onclick="switchView('fermeture')" class="btn-module fermeture">
-                        <i class="fas fa-box"></i> PV Fermeture
-                    </button>
-                </div>
+            <div class="modules-buttons">
+                <button onclick="switchView('transport')" class="btn-module transport">
+                    <i class="fas fa-ambulance"></i>
+                    <span>Déclaration de Transport</span>
+                </button>
+                <button onclick="switchView('fermeture')" class="btn-module fermeture">
+                    <i class="fas fa-box"></i>
+                    <span>Procès-Verbal de Fermeture</span>
+                </button>
             </div>
         </div>
 
         <div id="section-transport" class="fade-in hidden">
             <div class="module-banner transport-banner">
                 <h2><i class="fas fa-ambulance"></i> Transport de Corps</h2>
-                <button onclick="switchView('main')" class="btn-back">← Retour Dossier</button>
+                <button onclick="openTab('tab-technique')" class="btn-back">← Retour Menu</button>
             </div>
-            
             <div class="card">
                 <div class="card-body grid-form">
                     <div class="input-group span-2">
                         <label>Type de Transport</label>
                         <div class="segment-control">
-                            <label><input type="radio" name="transport_type" value="avant" checked><span>Avant mise en bière</span></label>
-                            <label><input type="radio" name="transport_type" value="apres"><span>Après mise en bière</span></label>
+                            <label><input type="radio" name="transport_type" value="avant" checked><span>Avant Mise en Bière</span></label>
+                            <label><input type="radio" name="transport_type" value="apres"><span>Après Mise en Bière</span></label>
                         </div>
                     </div>
-                    <div class="input-group span-2"><label>Immatriculation Véhicule</label><input id="immatriculation" value="DA-081-ZQ" style="font-weight: bold; color: #8e44ad;"></div>
+                    <div class="input-group span-2"><label>Immatriculation</label><input id="immatriculation" value="DA-081-ZQ" style="font-weight:bold;"></div>
                     
-                    <div class="divider span-2"><span>Départ</span></div>
-                    <div class="input-group"><label>Date Départ</label><input id="date_depart_t" type="date"></div>
+                    <div class="divider span-2"><span>Itinéraire</span></div>
+                    <div class="input-group"><label>Départ le</label><input id="date_depart_t" type="date"></div>
                     <div class="input-group"><label>Heure</label><input id="heure_depart_t" type="time"></div>
-                    <div class="input-group span-2"><label>Lieu de départ</label><input id="lieu_depart_t" placeholder="Hôpital, Domicile..."></div>
+                    <div class="input-group span-2"><label>Lieu Départ</label><input id="lieu_depart_t"></div>
                     
-                    <div class="divider span-2"><span>Arrivée</span></div>
-                    <div class="input-group"><label>Date Arrivée</label><input id="date_arrivee_t" type="date"></div>
+                    <div class="input-group"><label>Arrivée le</label><input id="date_arrivee_t" type="date"></div>
                     <div class="input-group"><label>Heure</label><input id="heure_arrivee_t" type="time"></div>
-                    <div class="input-group span-2"><label>Lieu d'arrivée</label><input id="lieu_arrivee_t" placeholder="Funérarium, Cimetière..."></div>
+                    <div class="input-group span-2"><label>Lieu Arrivée</label><input id="lieu_arrivee_t"></div>
                     
-                    <div class="divider span-2"><span>Signature Transport</span></div>
                     <div class="input-group"><label>Fait à</label><input id="faita_transport"></div>
                     <div class="input-group"><label>Le</label><input id="dateSignature_transport" type="date"></div>
                 </div>
@@ -270,39 +306,35 @@
 
         <div id="section-fermeture" class="fade-in hidden">
             <div class="module-banner fermeture-banner">
-                <h2><i class="fas fa-box"></i> Fermeture de Cercueil (PV)</h2>
-                <button onclick="switchView('main')" class="btn-back">← Retour Dossier</button>
+                <h2><i class="fas fa-box"></i> PV Fermeture</h2>
+                <button onclick="openTab('tab-technique')" class="btn-back">← Retour Menu</button>
             </div>
             <div class="card">
                 <div class="card-body grid-form">
                     <div class="input-group"><label>Date Fermeture</label><input id="date_fermeture" type="date"></div>
-                    <div class="input-group"><label>Lieu Fermeture</label><input id="lieu_fermeture" placeholder="Chambre Funéraire..."></div>
+                    <div class="input-group"><label>Lieu Fermeture</label><input id="lieu_fermeture"></div>
                 </div>
             </div>
             <div class="card">
-                <div class="card-header">Personne assistant à la fermeture</div>
+                <div class="card-header">Témoins</div>
                 <div class="card-body">
-                    <div class="segment-control presence-toggle">
-                        <label><input type="radio" name="type_presence" value="famille" onclick="togglePresence('famille')" checked><span><i class="fas fa-users"></i> Famille</span></label>
-                        <label><input type="radio" name="type_presence" value="police" onclick="togglePresence('police')"><span><i class="fas fa-user-shield"></i> Police</span></label>
+                    <div class="segment-control presence-toggle" style="margin-bottom:20px;">
+                        <label><input type="radio" name="type_presence" value="famille" onclick="togglePresence('famille')" checked><span>Famille Présente</span></label>
+                        <label><input type="radio" name="type_presence" value="police" onclick="togglePresence('police')"><span>Police (Absence Famille)</span></label>
                     </div>
+                    
                     <div id="bloc_presence_famille" class="grid-form animated-bloc">
-                        <div class="span-2 text-right"><button type="button" class="btn-link" onclick="copierMandant()"><i class="fas fa-sync-alt"></i> Recopier Mandant</button></div>
-                        <div class="input-group span-2"><label>Nom & Prénom</label><input id="f_nom_prenom" placeholder="Personne présente"></div>
-                        <div class="input-group"><label>Lien</label><input id="f_lien" placeholder="ex: Fils"></div>
-                        <div class="input-group"><label>Adresse</label><input id="f_adresse" placeholder="Adresse du présent"></div>
+                        <div class="span-2 text-right"><button type="button" class="btn-link" onclick="copierMandant()">Recopier Mandant</button></div>
+                        <div class="input-group span-2"><label>Nom & Prénom</label><input id="f_nom_prenom"></div>
+                        <div class="input-group"><label>Lien</label><input id="f_lien"></div>
+                        <div class="input-group"><label>Adresse</label><input id="f_adresse"></div>
                     </div>
+                    
                     <div id="bloc_presence_police" class="grid-form animated-bloc hidden">
-                        <div class="notice-box span-2"><i class="fas fa-info-circle"></i> Uniquement en l'absence de famille.</div>
-                        <div class="input-group span-2"><label>Nom et Grade</label><input id="p_nom_grade" placeholder="ex: Gardien de la Paix M. DUPONT"></div>
-                        <div class="input-group span-2"><label>Commissariat</label><input id="p_commissariat" placeholder="Unité de rattachement"></div>
+                        <div class="notice-box span-2">Uniquement requis si aucun membre de la famille n'est présent.</div>
+                        <div class="input-group span-2"><label>Nom et Grade</label><input id="p_nom_grade"></div>
+                        <div class="input-group span-2"><label>Commissariat</label><input id="p_commissariat"></div>
                     </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-body grid-form">
-                     <div class="input-group"><label>Fait à</label><input id="faita_fermeture"></div>
-                     <div class="input-group"><label>Le</label><input id="dateSignature_fermeture" type="date"></div>
                 </div>
             </div>
             <div class="actions-bar center"><button onclick="genererFermeture()" class="btn btn-blue big-btn">Générer PV Fermeture</button></div>
