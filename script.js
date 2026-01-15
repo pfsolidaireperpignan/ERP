@@ -1,5 +1,42 @@
 /* ==========================================================================
-   CONFIG & HELPERS
+   SECURITE & CONFIG
+   ========================================================================== */
+const PASSWORD_ACCES = "PF2024"; // <--- CHANGEZ VOTRE MOT DE PASSE ICI
+
+function checkPassword() {
+    const input = document.getElementById('password-input').value;
+    const errorMsg = document.getElementById('login-error');
+    const loginScreen = document.getElementById('login-screen');
+    const appContent = document.getElementById('app-content');
+
+    if (input === PASSWORD_ACCES) {
+        // Mot de passe correct
+        loginScreen.style.display = 'none';
+        appContent.classList.remove('hidden');
+        // Sauvegarde temporaire pour ne pas redemander si on rafraichit la page
+        sessionStorage.setItem('isLoggedIn', 'true');
+    } else {
+        // Erreur
+        errorMsg.style.display = 'block';
+        document.getElementById('password-input').value = '';
+    }
+}
+
+// Vérifie si déjà connecté au chargement
+document.addEventListener("DOMContentLoaded", () => {
+    // Gestion touche Entrée sur le login
+    document.getElementById('password-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkPassword();
+    });
+
+    if (sessionStorage.getItem('isLoggedIn') === 'true') {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-content').classList.remove('hidden');
+    }
+});
+
+/* ==========================================================================
+   HELPERS & LOGIQUE EXISTANTE
    ========================================================================== */
 const v = (id) => {
     const el = document.getElementById(id);
@@ -13,12 +50,13 @@ const font = "helvetica";
 let logoBase64 = null;
 
 window.onload = () => {
-    document.getElementById('faita').value = "Perpignan";
+    // Initialisation des champs
+    if(document.getElementById('faita')) document.getElementById('faita').value = "Perpignan";
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('dateSignature').value = today;
+    if(document.getElementById('dateSignature')) document.getElementById('dateSignature').value = today;
     if(document.getElementById('date_fermeture')) document.getElementById('date_fermeture').value = today;
 
-    // Tentative de chargement du logo dès le début
+    // Tentative de chargement du logo
     setTimeout(chargerLogoBase64, 500);
 };
 
@@ -27,7 +65,7 @@ function chargerLogoBase64() {
     const imgElement = document.getElementById('logo-source');
     
     // Si l'image n'est pas chargée, on attend un peu
-    if (!imgElement.complete || imgElement.naturalWidth === 0) {
+    if (!imgElement || !imgElement.complete || imgElement.naturalWidth === 0) {
         console.warn("Logo pas encore prêt ou introuvable.");
         return;
     }
@@ -43,7 +81,6 @@ function chargerLogoBase64() {
         console.log("Logo converti pour PDF avec succès.");
     } catch (e) {
         console.error("Erreur de sécurité (CORS/Local) sur le logo :", e);
-        // Si erreur (fichier local), on essaie de l'utiliser sans base64 si possible ou on abandonne le filigrane
         logoBase64 = null; 
     }
 }
@@ -72,7 +109,10 @@ function ajouterFiligrane(pdf) {
 /* --- Navigation & Logique Interface --- */
 function switchView(viewName) {
     const sections = ['section-main', 'section-transport', 'section-fermeture'];
-    sections.forEach(s => document.getElementById(s).classList.add('hidden'));
+    sections.forEach(s => {
+        const el = document.getElementById(s);
+        if(el) el.classList.add('hidden');
+    });
 
     const villeBase = v("faita");
     const dateBase = v("dateSignature");
@@ -193,7 +233,6 @@ function helperLignePropre(pdf, label, value, x, y, dotsStart = 60) {
 
 /* --- 1. POUVOIR --- */
 function genererPouvoir() {
-    // On force le rechargement du logo si pas fait (cas navigation rapide)
     if(!logoBase64) chargerLogoBase64();
 
     const { jsPDF } = window.jspdf;
@@ -230,7 +269,6 @@ function genererPouvoir() {
 
     pdf.setTextColor(0); pdf.setFontSize(9);
     data.forEach(row => {
-        // Fond blanc pour lisibilité sur filigrane
         pdf.setFillColor(252, 253, 255);
         pdf.rect(20, y-4, 50, 7, 'F'); pdf.rect(70, y-4, 120, 7, 'F');
         
@@ -258,14 +296,13 @@ function genererPouvoir() {
     pdf.save(`Pouvoir_${v("nom")}.pdf`);
 }
 
-/* --- 2. DECLARATION (Officielle - Sans logo PF en haut) --- */
+/* --- 2. DECLARATION --- */
 function genererDeclaration() {
     if(!logoBase64) chargerLogoBase64();
     
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF();
     
-    // Filigrane (facultatif ici car document officiel, mais on le met si demandé)
     ajouterFiligrane(pdf);
     
     pdf.setFont("times", "bold");
@@ -273,23 +310,17 @@ function genererDeclaration() {
     // TITRE
     pdf.setFontSize(18);
     pdf.text("DECLARATION DE DECES", 105, 30, { align: "center" });
-    pdf.setLineWidth(0.5);
-    pdf.line(65, 32, 145, 32);
+    pdf.setLineWidth(0.5); pdf.line(65, 32, 145, 32);
 
-    // Sous-titre
     pdf.setFontSize(11);
     pdf.text("Dans tous les cas à remettre obligatoirement complété et signé", 105, 40, { align: "center" });
-    pdf.setLineWidth(0.3);
-    pdf.line(45, 41, 165, 41);
+    pdf.setLineWidth(0.3); pdf.line(45, 41, 165, 41);
 
     let y = 60; 
-    const margin = 20;
-    const endLine = 190;
-    const dotStep = 2;
+    const margin = 20; const endLine = 190; const dotStep = 2;
 
     const drawFormLine = (label, val, yPos) => {
-        pdf.setFont("times", "bold");
-        pdf.setFontSize(11);
+        pdf.setFont("times", "bold"); pdf.setFontSize(11);
         pdf.text(label + " : ", margin, yPos);
         const startDots = margin + pdf.getTextWidth(label + " : ");
         let curX = startDots;
@@ -300,7 +331,6 @@ function genererDeclaration() {
             pdf.setFont("times", "bold");
             const valWidth = pdf.getTextWidth(val);
             const textX = startDots + 5; 
-            // Rectangle blanc pour cacher les points et le filigrane sous le texte
             pdf.setFillColor(255, 255, 255);
             pdf.rect(textX - 1, yPos - 4, valWidth + 2, 5, 'F');
             pdf.text(val.toUpperCase(), textX, yPos);
@@ -366,7 +396,6 @@ function genererDeclaration() {
     y += 10;
     const profType = getProf(); 
     
-    // Cases à cocher (Fond blanc pour masquer filigrane)
     pdf.setFillColor(255); pdf.rect(margin + 5, y-4, 6, 6, 'F'); pdf.rect(margin + 5, y-4, 6, 6);
     pdf.text("Sans profession", margin + 15, y+1);
     if(profType === "Sans profession") {
@@ -431,7 +460,6 @@ function genererFermeture() {
     helperLignePropre(pdf, "DATE", formatD(v("date_fermeture")), xL, y, xD);
     helperLignePropre(pdf, "LIEU", v("lieu_fermeture"), 110, y, 125); y+=15;
 
-    // Fond blanc sur la zone défunt pour lisibilité
     pdf.setFillColor(250, 250, 250); pdf.rect(20, y-5, 170, 32, 'F');
     pdf.setFont(font, "bold"); pdf.text("CONCERNANT LE DÉFUNT(E) :", xL, y); y+=8;
     helperLignePropre(pdf, "NOM / PRÉNOMS", `${v("nom")} ${v("prenom")}`, xL, y, xD); y+=8;
@@ -455,7 +483,6 @@ function genererFermeture() {
     }
 
     y = 220;
-    // Fonds blancs pour signatures
     pdf.setFillColor(255); pdf.rect(20, y, 80, 35, 'F'); pdf.rect(110, y, 80, 35, 'F');
     pdf.rect(20, y, 80, 35); pdf.rect(110, y, 80, 35);
     
@@ -499,7 +526,6 @@ function genererTransport() {
     pdf.text("Je soussigné, M. CHERKAOUI Mustapha, Gérant des PF Solidaire,", x, y); y+=6;
     pdf.text("Déclare effectuer le transport de la personne décédée suivante :", x, y); y+=15;
 
-    // Cadre Défunt (Fond blanc)
     pdf.setFillColor(245); pdf.rect(20, y-5, 170, 25, 'F');
     pdf.setFont(font, "bold"); pdf.text(`${v("nom")} ${v("prenom")}`, 105, y+2, { align: "center" });
     pdf.setFont(font, "normal");
