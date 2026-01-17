@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Facturation - PF Solidaire</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <img id="logo-source" src="Logo.png" style="display: none;" crossorigin="anonymous">
+
+    <div class="invoice-wrapper">
+        <div class="top-bar"></div>
+
+        <div id="view-list">
+            <div class="list-header">
+                <div>
+                    <h2 style="margin:0; color:#1e293b;">Gestion des Documents</h2>
+                    <p style="margin:5px 0 0 0; color:#64748b;">Historique des devis et factures</p>
+                </div>
+                <div>
+                    <a href="index.html" class="btn btn-outline" style="text-decoration:none; margin-right:10px;">
+                        <i class="fas fa-home"></i> Retour Accueil
+                    </a>
+                    <button onclick="window.nouvelleFacture()" class="btn btn-purple">
+                        <i class="fas fa-plus"></i> Nouveau Document
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px; display:flex; gap:10px;">
+                <input id="search-input" placeholder="Rechercher (Nom, Numéro...)" style="padding:10px; border:1px solid #ccc; border-radius:6px; width:300px;" onkeyup="window.filtrerHistorique()">
+            </div>
+
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Numéro</th>
+                        <th>Client / Défunt</th>
+                        <th>Objet</th>
+                        <th style="text-align:right;">Montant TTC</th>
+                        <th style="text-align:center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    <tr><td colspan="7" style="text-align:center; padding:20px; color:#999;">Chargement en cours...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="view-form" class="hidden">
+            
+            <div class="form-header">
+                <button onclick="window.afficherListe()" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                </button>
+                <div style="font-weight:bold; color:#1e293b; font-size:1.1rem;">
+                    ÉDITION DE DOCUMENT
+                </div>
+            </div>
+
+            <div class="header-grid">
+                <div class="client-box">
+                    <label style="font-weight:bold; color:var(--accent);">CLIENT / MANDANT :</label>
+                    <input id="facture_nom" list="clients-datalist" placeholder="Rechercher client..." style="width:100%; padding:8px; margin:5px 0; border:1px solid #ccc; border-radius:4px;" onchange="window.checkClientAuto()">
+                    <datalist id="clients-datalist"></datalist>
+                    
+                    <input id="facture_adresse" placeholder="Adresse complète..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                <div class="client-box">
+                    <label style="font-weight:bold; color:#64748b;">CONCERNE LE DÉFUNT :</label>
+                    <input id="facture_defunt" placeholder="Nom Prénom du défunt..." style="width:100%; padding:8px; margin:5px 0; border:1px solid #ccc; border-radius:4px;">
+                    
+                    <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                        <div>
+                            <label>Type :</label>
+                            <select id="doc_type" style="padding:5px; font-weight:bold;">
+                                <option value="DEVIS">DEVIS</option>
+                                <option value="FACTURE">FACTURE</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Date :</label>
+                            <input type="date" id="facture_date" style="padding:5px;">
+                        </div>
+                    </div>
+                    <div style="text-align:right; margin-top:5px; font-size:0.9rem; color:#ef4444;">
+                        N° : <input id="facture_numero" value="(Auto)" disabled style="width:80px; border:none; background:transparent; font-weight:bold; text-align:right; color:#ef4444;">
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:#f1f5f9; padding:15px; border-radius:8px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="flex:1; margin-right:20px;">
+                    <label style="font-weight:bold;">OBJET DU DEVIS :</label>
+                    <select id="facture_sujet_select" onchange="window.changerModele(this.value)" style="padding:8px; width:100%; margin-top:5px; border:1px solid #ccc; border-radius:4px;">
+                        <option value="" disabled selected>-- Choisir un modèle --</option>
+                        <option value="INHUMATION">INHUMATION</option>
+                        <option value="CREMATION">CRÉMATION</option>
+                        <option value="RAPATRIEMENT">RAPATRIEMENT</option>
+                        <option value="AUTRE">VIDE</option>
+                    </select>
+                    <input type="hidden" id="facture_sujet">
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="window.ajouterTitreSection()" class="btn" style="background:#fff7ed; color:#9a3412; border:1px solid #fdba74;"><i class="fas fa-heading"></i> Section</button>
+                    <button onclick="window.ajouterLigne()" class="btn btn-outline"><i class="fas fa-plus"></i> Ligne</button>
+                </div>
+            </div>
+
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th style="width:5%"></th>
+                        <th style="width:40%">DÉSIGNATION</th>
+                        <th style="width:15%">TYPE</th>
+                        <th style="width:10%">TVA</th>
+                        <th style="width:15%">PRIX TTC</th>
+                        <th style="width:5%"></th>
+                    </tr>
+                </thead>
+                <tbody id="lines-body"></tbody>
+            </table>
+
+            <div class="total-box">
+                TOTAL TTC : <span id="total-ttc">0.00 €</span>
+            </div>
+
+            <div style="margin-top:20px; font-size:0.85rem; color:#666;">
+                <p>NB : (NA) TVA non applicable, art 293 B du CGI. Paiement 100% à réception.</p>
+            </div>
+
+            <div class="actions-bar center" style="margin-top:40px; padding-top:20px; border-top:1px solid #eee; gap:20px;">
+                <button onclick="window.sauvegarderFactureBase()" class="btn btn-green big-btn"><i class="fas fa-save"></i> ENREGISTRER</button>
+                <button onclick="window.genererPDFFacture()" class="btn btn-blue big-btn"><i class="fas fa-print"></i> IMPRIMER PDF</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module" src="script_facturation.js"></script>
+</body>
+</html>

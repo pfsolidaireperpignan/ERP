@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PF Solidaire - Espace Pro</title>
+    <title>PF Solidaire - Hub</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -15,53 +15,72 @@
         <div class="login-box">
             <img src="Logo.png" alt="Logo" class="login-logo">
             <h2 class="login-title">Espace Pro</h2>
-            <div class="input-group">
-                <input type="password" id="password-input" placeholder="Code d'accès...">
+            <div class="input-group" style="margin-bottom:15px;">
+                <input type="email" id="email-input" placeholder="Email (admin@pf...)" value="admin@pf-solidaire.com">
             </div>
-            <button onclick="window.checkPassword()" class="btn-login">
+            <div class="input-group">
+                <input type="password" id="password-input" placeholder="Mot de passe...">
+            </div>
+            <button onclick="window.loginFirebase()" class="btn-login">
                 Connexion <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
             </button>
-            <p id="login-error" class="error-msg" style="display:none; color:#ef4444; margin-top:10px;">
-                <i class="fas fa-exclamation-circle"></i> Mot de passe incorrect
+            <p id="login-error" class="hidden" style="color:#ef4444; margin-top:10px;">
+                <i class="fas fa-exclamation-circle"></i> Erreur d'identification
             </p>
         </div>
     </div>
 
-    <div id="app-content" class="main-wrapper hidden">
+    <div id="hub-accueil" class="main-wrapper hidden" style="text-align:center; margin-top:80px;">
+        <img src="Logo.png" alt="Logo" style="height:100px; margin-bottom:20px;">
+        <h1 class="brand-title" style="margin-bottom:40px;">Bienvenue, que souhaitez-vous faire ?</h1>
         
+        <div class="hub-buttons-container">
+            <div class="hub-card" onclick="window.ouvrirApp('admin')">
+                <div class="hub-icon"><i class="fas fa-folder-open"></i></div>
+                <h3>Gestion Administrative</h3>
+                <p>Création de dossiers, Mairie, Préfecture, Police...</p>
+            </div>
+            <div class="hub-card" onclick="window.ouvrirApp('devis')">
+                <div class="hub-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                <h3>Devis & Facturation</h3>
+                <p>Créer un devis rapide, facturer un client...</p>
+            </div>
+        </div>
+        
+        <div style="margin-top:50px;">
+            <button onclick="window.logout()" class="btn btn-outline">Se déconnecter</button>
+        </div>
+    </div>
+
+    <div id="app-content" class="main-wrapper hidden">
+        <div style="margin-bottom:20px;">
+            <button onclick="window.retourHub()" class="btn btn-outline" style="border:none; background:transparent;">
+                <i class="fas fa-arrow-left"></i> Retour au Menu
+            </button>
+        </div>
+
         <header>
             <div class="header-container">
-                <div class="logo-wrapper">
-                    <img src="Logo.png" alt="PF Solidaire" class="main-logo">
-                </div>
+                <div class="logo-wrapper"><img src="Logo.png" alt="Logo" class="main-logo"></div>
                 <div class="text-area">
-                    <h1 class="brand-title">PF <span style="color:var(--accent);">SOLIDAIRE</span></h1>
-                    <p class="brand-subtitle">Gestion Administrative - M. CHERKAOUI</p>
+                    <h1 class="brand-title">GESTION <span style="color:var(--accent);">ADMINISTRATIVE</span></h1>
+                    <p class="brand-subtitle">Dossiers & Démarches</p>
                 </div>
             </div>
         </header>
 
         <nav class="tab-navigation">
-            <button class="tab-btn active" onclick="window.openTab('tab-dossier')">
-                <i class="fas fa-folder-open"></i> 1. Dossier
-            </button>
-            <button class="tab-btn" onclick="window.openTab('tab-documents')">
-                <i class="fas fa-print"></i> 2. Documents
-            </button>
-            <button class="tab-btn" onclick="window.openTab('tab-technique')">
-                <i class="fas fa-cogs"></i> 3. Technique
-            </button>
-            <button class="tab-btn" onclick="window.openTab('tab-base')" style="color: var(--purple-brand);">
-                <i class="fas fa-database"></i> 4. Base Clients
-            </button>
+            <button class="tab-btn active" onclick="window.openTab('tab-dossier')"><i class="fas fa-folder-open"></i> 1. Dossier</button>
+            <button class="tab-btn" onclick="window.openTab('tab-documents')"><i class="fas fa-print"></i> 2. Documents</button>
+            <button class="tab-btn" onclick="window.openTab('tab-technique')"><i class="fas fa-cogs"></i> 3. Technique</button>
+            <button class="tab-btn" onclick="window.openTab('tab-base')" style="color: var(--purple-brand);"><i class="fas fa-database"></i> 4. Base Clients</button>
         </nav>
 
         <div id="tab-dossier" class="tab-content fade-in active">
-            
-            <div class="actions-bar" style="margin-bottom: 20px; justify-content: space-between; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+             <div class="actions-bar" style="margin-bottom: 20px; justify-content: space-between; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <div style="display:flex; gap:10px; align-items:center;">
-                    <span style="font-weight:bold; color:var(--primary);">Dossier en cours :</span>
-                    <span id="current-client-name" style="color:var(--accent);">Nouveau (Non enregistré)</span>
+                    <span style="font-weight:bold; color:var(--primary);">Dossier :</span>
+                    <span id="current-client-name" style="color:var(--accent);">Nouveau</span>
                 </div>
                 <div style="display:flex; gap:10px;">
                     <button onclick="window.resetDossier()" class="btn btn-outline" style="padding: 8px 15px; font-size: 0.85rem;"><i class="fas fa-file"></i> Nouveau</button>
@@ -72,51 +91,34 @@
             <div class="card">
                 <div class="card-header"><i class="fas fa-user-pen"></i> Mandant (Famille)</div>
                 <div class="card-body grid-form">
-                    <div class="input-group span-2">
-                        <label>Je soussigné(e)</label>
-                        <input id="soussigne" placeholder="Nom et Prénom du signataire">
-                    </div>
-                    <div class="input-group span-2">
-                        <label>Demeurant à</label>
-                        <input id="demeurant" placeholder="Adresse complète">
-                    </div>
-                    <div class="input-group">
-                        <label>Lien de parenté</label>
-                        <input id="lien" placeholder="ex: Fils, Épouse...">
-                    </div>
-                    <div class="input-group">
-                        <label>Nationalité</label>
-                        <input id="nationalite_mandant" value="Française">
-                    </div>
+                    <div class="input-group span-2"><label>Je soussigné(e)</label><input id="soussigne" placeholder="Nom et Prénom"></div>
+                    <div class="input-group span-2"><label>Demeurant à</label><input id="demeurant" placeholder="Adresse complète"></div>
+                    <div class="input-group"><label>Lien de parenté</label><input id="lien"></div>
+                    <div class="input-group"><label>Nationalité</label><input id="nationalite_mandant" value="Française"></div>
                 </div>
             </div>
-
+            
             <div class="card">
                 <div class="card-header"><i class="fas fa-user-clock"></i> Défunt</div>
                 <div class="card-body grid-form">
                     <div class="input-group"><label>Nom d'usage</label><input id="nom" placeholder="NOM"></div>
-                    <div class="input-group"><label>Nom de jeune fille</label><input id="nom_jeune_fille" placeholder="Facultatif"></div>
-                    <div class="input-group"><label>Prénoms</label><input id="prenom" placeholder="Prénoms"></div>
-                    
+                    <div class="input-group"><label>Nom de jeune fille</label><input id="nom_jeune_fille"></div>
+                    <div class="input-group"><label>Prénoms</label><input id="prenom"></div>
                     <div class="input-group"><label>Sexe</label>
                         <div class="segment-control">
                             <label><input type="radio" name="sexe" value="Masculin" checked><span>Homme</span></label>
                             <label><input type="radio" name="sexe" value="Féminin"><span>Femme</span></label>
                         </div>
                     </div>
-                    
                     <div class="input-group"><label>Né(e) le</label><input id="date_naiss" type="date"></div>
                     <div class="input-group"><label>À (Ville, Pays)</label><input list="villes-monde" id="lieu_naiss"></div>
                     <div class="input-group"><label>Décédé(e) le</label><input id="date_deces" type="date"></div>
                     <div class="input-group"><label>À (Ville)</label><input list="villes-monde" id="lieu_deces"></div>
-
                     <datalist id="villes-monde">
                         <option value="Perpignan (France)"><option value="Thuir (France)"><option value="Paris (France)">
                         <option value="Casablanca (Maroc)"><option value="Rabat (Maroc)"><option value="Aklim Berkane (Maroc)">
                     </datalist>
-
-                    <div class="input-group span-2"><label>Dernier Domicile</label><input id="adresse_fr" placeholder="Adresse complète"></div>
-                    
+                    <div class="input-group span-2"><label>Dernier Domicile</label><input id="adresse_fr"></div>
                     <div class="input-group span-2">
                         <label>Situation Professionnelle</label>
                         <div class="segment-control">
@@ -124,23 +126,17 @@
                             <label><input type="radio" name="prof_type" value="Retraité(e)" onclick="window.toggleProf(false)"><span>Retraité(e)</span></label>
                             <label><input type="radio" name="prof_type" value="autre" onclick="window.toggleProf(true)" checked><span>Active / Autre</span></label>
                         </div>
-                        <input id="profession_autre" placeholder="Précisez le métier (ex: Enseignant)" style="margin-top: 10px;">
+                        <input id="profession_autre" placeholder="Précisez le métier" style="margin-top: 10px;">
                     </div>
-
-                    <div class="input-group"><label>Père</label><input id="pere" placeholder="Prénom NOM"></div>
-                    <div class="input-group"><label>Mère</label><input id="mere" placeholder="Prénom NOM"></div>
-                    
-                    <div class="input-group">
-                        <label>Situation Matrimoniale</label>
+                    <div class="input-group"><label>Père</label><input id="pere"></div>
+                    <div class="input-group"><label>Mère</label><input id="mere"></div>
+                    <div class="input-group"><label>Situation Matrimoniale</label>
                         <select id="matrimoniale" onchange="window.toggleConjoint()">
                             <option value="Célibataire">Célibataire</option><option value="Marié(e)">Marié(e)</option>
                             <option value="Veuf(ve)">Veuf(ve)</option><option value="Divorcé(e)">Divorcé(e)</option>
                         </select>
                     </div>
-                    <div class="input-group">
-                        <label>Nom du Conjoint(e)</label>
-                        <input id="conjoint" disabled placeholder="Si applicable">
-                    </div>
+                    <div class="input-group"><label>Nom du Conjoint(e)</label><input id="conjoint" disabled></div>
                     <div class="input-group"><label>Nationalité défunt</label><input id="nationalite" value="Française"></div>
                 </div>
             </div>
@@ -148,7 +144,6 @@
             <div class="card" style="border-left: 4px solid var(--accent);">
                 <div class="card-header"><i class="fas fa-church"></i> Cérémonie & Technique</div>
                 <div class="card-body grid-form">
-                    
                     <div class="input-group span-2 highlight-box">
                         <label>Type d'opération principale</label>
                         <select id="prestation" onchange="window.toggleCeremonie()" style="font-weight:bold; color:var(--primary-dark);">
@@ -165,12 +160,10 @@
                         <div class="input-group"><label>Date Opération</label><input id="date_inhumation" type="date"></div>
                         <div class="input-group"><label>Heure</label><input id="heure_inhumation" type="time"></div>
                         <div class="input-group"><label>N° Concession</label><input id="num_concession"></div>
-                        <div class="input-group"><label>Titulaire Concession</label><input id="titulaire_concession" placeholder="ex: Mme DUPONT"></div>
+                        <div class="input-group"><label>Titulaire Concession</label><input id="titulaire_concession"></div>
                         <div class="input-group"><label>Type Sépulture</label>
                             <select id="type_sepulture">
-                                <option value="Caveau">Caveau</option>
-                                <option value="Pleine terre">Pleine terre</option>
-                                <option value="Cavurne">Cavurne</option>
+                                <option value="Caveau">Caveau</option><option value="Pleine terre">Pleine terre</option><option value="Cavurne">Cavurne</option>
                             </select>
                         </div>
                     </div>
@@ -186,7 +179,6 @@
                         <div class="divider span-2"><span style="color:var(--accent);">Infos Rapatriement</span></div>
                         <div class="input-group"><label>Pays Destination</label><input id="rap_pays" placeholder="ex: MAROC"></div>
                         <div class="input-group"><label>Ville Inhumation</label><input id="rap_ville" placeholder="ex: Aklim Berkane"></div>
-
                         <div class="input-group span-2" style="background:#f1f5f9; padding:10px; border-radius:8px;">
                             <label style="color:#1e293b; font-weight:bold;">1. Partie Routière</label>
                             <div class="grid-form">
@@ -196,11 +188,9 @@
                                 <div class="input-group"><label>Date/Heure Départ</label><input id="rap_date_dep_route" placeholder="ex: 24/12 à 10h00"></div>
                             </div>
                         </div>
-
                         <div class="input-group span-2" style="background:#f1f5f9; padding:10px; border-radius:8px;">
                             <label style="color:#1e293b; font-weight:bold;">2. Partie Aérienne</label>
-                            <div class="input-group" style="margin-bottom:10px;"><label>N° LTA</label><input id="rap_lta" placeholder="ex: 147-93605046"></div>
-                            
+                            <div class="input-group" style="margin-bottom:10px;"><label>N° LTA</label><input id="rap_lta"></div>
                             <label style="font-size:0.75rem; color:#64748b;">VOL 1 (Principal)</label>
                             <div class="grid-form" style="margin-bottom:10px;">
                                 <div class="input-group"><label>N° Vol</label><input id="vol1_num"></div>
@@ -209,14 +199,12 @@
                                 <div class="input-group"><label>Aéroport Arrivée</label><input id="vol1_arr_aero"></div>
                                 <div class="input-group"><label>Atterrissage</label><input id="vol1_arr_time"></div>
                             </div>
-
                             <div class="input-group span-2">
                                 <label style="display:flex; align-items:center; cursor:pointer;">
                                     <input type="checkbox" id="check_vol2" onclick="window.toggleVol2()" style="width:auto; margin-right:8px;">
                                     <span style="font-weight:bold; color:var(--accent);">Ajouter une correspondance (Vol 2)</span>
                                 </label>
                             </div>
-
                             <div id="bloc_vol2" class="grid-form hidden">
                                 <label class="span-2" style="font-size:0.75rem; color:#64748b;">VOL 2 (Correspondance)</label>
                                 <div class="input-group"><label>N° Vol</label><input id="vol2_num"></div>
@@ -241,9 +229,8 @@
         <div id="tab-documents" class="tab-content fade-in hidden">
             <div class="module-banner" style="background: linear-gradient(to right, #0f766e, #115e59);">
                 <h2><i class="fas fa-print"></i> Centre d'impression</h2>
-                <p style="opacity:0.9; font-size:0.9rem;">Générez les documents officiels basés sur les données du dossier.</p>
+                <p style="opacity:0.9; font-size:0.9rem;">Documents officiels basés sur le dossier en cours.</p>
             </div>
-
             <div class="modules-nav" style="margin-top:0;">
                 <h3><i class="fas fa-users"></i> Famille & Déclaration</h3>
                 <div class="actions-bar center">
@@ -251,7 +238,6 @@
                     <button onclick="window.genererDeclaration()" class="btn btn-green"><i class="fas fa-file-medical"></i> Déclaration Décès</button>
                 </div>
             </div>
-
             <div class="modules-nav">
                 <h3><i class="fas fa-landmark"></i> Mairie & Préfecture</h3>
                 <div class="actions-bar center">
@@ -269,15 +255,12 @@
                 <h2><i class="fas fa-cogs"></i> Modules Techniques</h2>
                 <p style="opacity:0.9; font-size:0.9rem;">Documents spécifiques pour le transport et la fermeture.</p>
             </div>
-
             <div class="modules-buttons">
                 <button onclick="window.switchView('transport')" class="btn-module transport">
-                    <i class="fas fa-ambulance"></i>
-                    <span>Déclaration de Transport</span>
+                    <i class="fas fa-ambulance"></i><span>Déclaration de Transport</span>
                 </button>
                 <button onclick="window.switchView('fermeture')" class="btn-module fermeture">
-                    <i class="fas fa-box"></i>
-                    <span>Procès-Verbal de Fermeture</span>
+                    <i class="fas fa-box"></i><span>Procès-Verbal de Fermeture</span>
                 </button>
             </div>
         </div>
@@ -285,9 +268,8 @@
         <div id="tab-base" class="tab-content fade-in hidden">
             <div class="module-banner" style="background: linear-gradient(to right, #7c3aed, #6d28d9);">
                 <h2><i class="fas fa-database"></i> Base de Données Clients</h2>
-                <p style="opacity:0.9; font-size:0.9rem;">Retrouvez et modifiez tous les dossiers enregistrés.</p>
+                <p style="opacity:0.9; font-size:0.9rem;">Retrouvez et modifiez tous les dossiers.</p>
             </div>
-            
             <div class="card">
                 <div class="card-header"><i class="fas fa-search"></i> Recherche</div>
                 <div class="card-body">
@@ -295,20 +277,10 @@
                         <input id="search-input" placeholder="Rechercher par nom..." onkeyup="window.rechercherDossier()">
                         <button class="btn btn-blue" onclick="window.rechercherDossier()"><i class="fas fa-search"></i></button>
                     </div>
-                    
                     <div class="table-responsive">
                         <table class="client-table">
-                            <thead>
-                                <tr>
-                                    <th>Nom Défunt</th>
-                                    <th>Date Décès</th>
-                                    <th>Prestation</th>
-                                    <th>Créé le</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="clients-list-body">
-                                </tbody>
+                            <thead><tr><th>Nom Défunt</th><th>Date Décès</th><th>Prestation</th><th>Actions</th></tr></thead>
+                            <tbody id="clients-list-body"></tbody>
                         </table>
                     </div>
                 </div>
@@ -318,75 +290,62 @@
         <div id="section-transport" class="fade-in hidden">
             <div class="module-banner transport-banner">
                 <h2><i class="fas fa-ambulance"></i> Transport de Corps</h2>
-                <button onclick="window.openTab('tab-technique')" class="btn-back">← Retour Menu</button>
+                <button onclick="window.openTab('tab-technique')" class="btn-back">← Retour</button>
             </div>
-            <div class="card">
-                <div class="card-body grid-form">
-                    <div class="input-group span-2">
-                        <label>Type de Transport</label>
-                        <div class="segment-control">
-                            <label><input type="radio" name="transport_type" value="avant" checked><span>Avant Mise en Bière</span></label>
-                            <label><input type="radio" name="transport_type" value="apres"><span>Après Mise en Bière</span></label>
-                        </div>
+            <div class="card"><div class="card-body grid-form">
+                <div class="input-group span-2"><label>Type</label>
+                    <div class="segment-control">
+                        <label><input type="radio" name="transport_type" value="avant" checked><span>Avant MEB</span></label>
+                        <label><input type="radio" name="transport_type" value="apres"><span>Après MEB</span></label>
                     </div>
-                    <div class="input-group span-2"><label>Immatriculation</label><input id="immatriculation" value="DA-081-ZQ" style="font-weight:bold;"></div>
-                    
-                    <div class="divider span-2"><span>Itinéraire</span></div>
-                    <div class="input-group"><label>Départ le</label><input id="date_depart_t" type="date"></div>
-                    <div class="input-group"><label>Heure</label><input id="heure_depart_t" type="time"></div>
-                    <div class="input-group span-2"><label>Lieu Départ</label><input id="lieu_depart_t"></div>
-                    
-                    <div class="input-group"><label>Arrivée le</label><input id="date_arrivee_t" type="date"></div>
-                    <div class="input-group"><label>Heure</label><input id="heure_arrivee_t" type="time"></div>
-                    <div class="input-group span-2"><label>Lieu Arrivée</label><input id="lieu_arrivee_t"></div>
-                    
-                    <div class="input-group"><label>Fait à</label><input id="faita_transport"></div>
-                    <div class="input-group"><label>Le</label><input id="dateSignature_transport" type="date"></div>
                 </div>
-            </div>
-            <div class="actions-bar center"><button onclick="window.genererTransport()" class="btn btn-purple big-btn">Générer PDF Transport</button></div>
+                <div class="input-group span-2"><label>Immatriculation</label><input id="immatriculation" value="DA-081-ZQ" style="font-weight:bold;"></div>
+                <div class="divider span-2"><span>Itinéraire</span></div>
+                <div class="input-group"><label>Départ le</label><input id="date_depart_t" type="date"></div>
+                <div class="input-group"><label>Heure</label><input id="heure_depart_t" type="time"></div>
+                <div class="input-group span-2"><label>Lieu Départ</label><input id="lieu_depart_t"></div>
+                <div class="input-group"><label>Arrivée le</label><input id="date_arrivee_t" type="date"></div>
+                <div class="input-group"><label>Heure</label><input id="heure_arrivee_t" type="time"></div>
+                <div class="input-group span-2"><label>Lieu Arrivée</label><input id="lieu_arrivee_t"></div>
+                <div class="input-group"><label>Fait à</label><input id="faita_transport"></div>
+                <div class="input-group"><label>Le</label><input id="dateSignature_transport" type="date"></div>
+            </div></div>
+            <div class="actions-bar center"><button onclick="window.genererTransport()" class="btn btn-purple big-btn">Générer PDF</button></div>
         </div>
 
         <div id="section-fermeture" class="fade-in hidden">
             <div class="module-banner fermeture-banner">
                 <h2><i class="fas fa-box"></i> PV Fermeture</h2>
-                <button onclick="window.openTab('tab-technique')" class="btn-back">← Retour Menu</button>
+                <button onclick="window.openTab('tab-technique')" class="btn-back">← Retour</button>
             </div>
-            <div class="card">
-                <div class="card-body grid-form">
-                    <div class="input-group"><label>Date Fermeture</label><input id="date_fermeture" type="date"></div>
-                    <div class="input-group"><label>Lieu Fermeture</label><input id="lieu_fermeture"></div>
-                </div>
-            </div>
+            <div class="card"><div class="card-body grid-form">
+                <div class="input-group"><label>Date Fermeture</label><input id="date_fermeture" type="date"></div>
+                <div class="input-group"><label>Lieu Fermeture</label><input id="lieu_fermeture"></div>
+            </div></div>
             <div class="card">
                 <div class="card-header">Témoins</div>
                 <div class="card-body">
                     <div class="segment-control presence-toggle" style="margin-bottom:20px;">
-                        <label><input type="radio" name="type_presence" value="famille" onclick="window.togglePresence('famille')" checked><span>Famille Présente</span></label>
-                        <label><input type="radio" name="type_presence" value="police" onclick="window.togglePresence('police')"><span>Police (Absence Famille)</span></label>
+                        <label><input type="radio" name="type_presence" value="famille" onclick="window.togglePresence('famille')" checked><span>Famille</span></label>
+                        <label><input type="radio" name="type_presence" value="police" onclick="window.togglePresence('police')"><span>Police</span></label>
                     </div>
-                    
                     <div id="bloc_presence_famille" class="grid-form animated-bloc">
                         <div class="span-2 text-right"><button type="button" class="btn-link" onclick="window.copierMandant()">Recopier Mandant</button></div>
                         <div class="input-group span-2"><label>Nom & Prénom</label><input id="f_nom_prenom"></div>
                         <div class="input-group"><label>Lien</label><input id="f_lien"></div>
                         <div class="input-group"><label>Adresse</label><input id="f_adresse"></div>
                     </div>
-                    
                     <div id="bloc_presence_police" class="grid-form animated-bloc hidden">
-                        <div class="notice-box span-2">Uniquement requis si aucun membre de la famille n'est présent.</div>
                         <div class="input-group span-2"><label>Nom et Grade</label><input id="p_nom_grade"></div>
                         <div class="input-group span-2"><label>Commissariat</label><input id="p_commissariat"></div>
                     </div>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-body grid-form">
-                     <div class="input-group"><label>Fait à</label><input id="faita_fermeture"></div>
-                     <div class="input-group"><label>Le</label><input id="dateSignature_fermeture" type="date"></div>
-                </div>
-            </div>
-            <div class="actions-bar center"><button onclick="window.genererFermeture()" class="btn btn-blue big-btn">Générer PV Fermeture</button></div>
+            <div class="card"><div class="card-body grid-form">
+                 <div class="input-group"><label>Fait à</label><input id="faita_fermeture"></div>
+                 <div class="input-group"><label>Le</label><input id="dateSignature_fermeture" type="date"></div>
+            </div></div>
+            <div class="actions-bar center"><button onclick="window.genererFermeture()" class="btn btn-blue big-btn">Générer PDF</button></div>
         </div>
 
     </div>
