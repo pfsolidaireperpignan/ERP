@@ -1,6 +1,8 @@
+/* Fichier : js/config.js (CORRIGÉ - AVEC getDoc) */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// AJOUT DE 'getDoc' DANS LA LIGNE CI-DESSOUS :
+import { getFirestore, collection, addDoc, getDocs, getDoc, query, orderBy, limit, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDmsIkTjW2IFkIks5BUAnxLLnc7pnj2e0w",
@@ -12,6 +14,19 @@ const firebaseConfig = {
     measurementId: "G-TWLLXKF0K4"
 };
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+let app, auth, db;
+try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    console.log("Firebase connecté OK");
+} catch (e) {
+    console.error("Erreur Config :", e);
+}
+
+export { 
+    auth, db, collection, addDoc, getDocs, 
+    getDoc, // <--- C'EST L'AJOUT CRUCIAL QUI MANQUAIT
+    query, orderBy, limit, doc, updateDoc, deleteDoc, 
+    onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail 
+};
