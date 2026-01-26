@@ -851,41 +851,40 @@ window.genererDemandeOuverture = function() {
     const { jsPDF } = window.jspdf; 
     const pdf = new jsPDF();
     
-    // En-tête standard
     headerPF(pdf); 
 
     // --- TITRE ---
     pdf.setFont("helvetica", "bold"); pdf.setFontSize(13); pdf.setTextColor(0);
     pdf.text("DEMANDE D'OUVERTURE D'UNE SEPULTURE DE FAMILLE", 105, 40, { align: "center" });
 
-    let y = 50; const x = 15; 
+    let y = 55; const x = 15; 
     
     // --- CASES À COCHER (POUR...) ---
     pdf.setFontSize(10);
     pdf.text("POUR : ", x, y);
-    
     const type = getVal("prestation");
     
     // Inhumation
     pdf.rect(x+20, y-4, 5, 5); 
-    if(type === "Inhumation") pdf.text("X", x+21, y);
+    if(type === "Inhumation") { pdf.setLineWidth(0.5); pdf.line(x+20, y-4, x+25, y+1); pdf.line(x+25, y-4, x+20, y+1); } // X dessiné
     pdf.text("INHUMATION", x+27, y);
 
     // Exhumation
     pdf.rect(x+65, y-4, 5, 5); 
-    if(type === "Exhumation") pdf.text("X", x+66, y);
+    if(type === "Exhumation") { pdf.setLineWidth(0.5); pdf.line(x+65, y-4, x+70, y+1); pdf.line(x+70, y-4, x+65, y+1); }
     pdf.text("EXHUMATION", x+72, y);
 
     // Scellement
     pdf.rect(x+110, y-4, 5, 5); 
     pdf.text("SCELLEMENT D'URNE", x+117, y);
-    
     y += 15;
 
-    // --- 1. NOUS SOUSSIGNONS (MANDANT) ---
+    // --- 1. NOUS SOUSSIGNONS ---
     pdf.setFont("helvetica", "normal");
     pdf.text("Nous soussignons :", x, y); y+=6;
-    pdf.text("➢ Nom et Prénom : ", x+5, y); 
+    
+    // Utilisation de ">" au lieu de "➢" pour éviter les bugs
+    pdf.text("> Nom et Prénom : ", x+5, y); 
     pdf.setFont("helvetica", "bold"); 
     pdf.text(`${getVal("civilite_mandant")} ${getVal("soussigne").toUpperCase()}`, x+40, y);
     
@@ -895,30 +894,29 @@ window.genererDemandeOuverture = function() {
     pdf.text(getVal("lien"), x+140, y);
     y += 12;
 
-    // --- 2. DEMANDONS À FAIRE (CONCESSION) ---
+    // --- 2. DEMANDONS À FAIRE ---
     pdf.setFont("helvetica", "bold");
-    pdf.text("◾ Demandons à faire :", x, y); y+=6;
+    pdf.rect(x, y-3, 2, 2, 'F'); // Petit carré noir dessiné (Remplace ◾)
+    pdf.text("Demandons à faire :", x+5, y); y+=6;
     
-    // Logique texte dynamique selon le type
     let actionTxt = "Ouvrir la concession";
     if(type === "Inhumation") actionTxt = "Inhumer dans la concession";
     if(type === "Exhumation") actionTxt = "Exhumer de la concession";
     
-    pdf.setFont("helvetica", "bold");
     pdf.text(`${actionTxt} :`, x+5, y); y+=6;
-    
     pdf.setFont("helvetica", "normal");
     pdf.text(`n° ${getVal("num_concession")}`, x+10, y);
     pdf.text(`acquise par : ${getVal("titulaire_concession")}`, x+50, y);
     pdf.text(`(Cimetière : ${getVal("cimetiere_nom")})`, x+130, y);
     y += 12;
 
-    // --- 3. LE CORPS DE (DÉFUNT) - AJOUTÉ ---
+    // --- 3. LE CORPS DE ---
     pdf.setFont("helvetica", "bold");
-    pdf.text("◾ Le corps de :", x, y); y+=6;
+    pdf.rect(x, y-3, 2, 2, 'F'); // Petit carré noir dessiné
+    pdf.text("Le corps de :", x+5, y); y+=6;
     
     pdf.setFont("helvetica", "normal");
-    pdf.text("➢ M/Mme : ", x+5, y);
+    pdf.text("> M/Mme : ", x+5, y);
     pdf.setFont("helvetica", "bold");
     pdf.text(`${getVal("civilite_defunt")} ${getVal("nom").toUpperCase()} ${getVal("prenom")}`, x+30, y);
     
@@ -926,19 +924,22 @@ window.genererDemandeOuverture = function() {
     pdf.text(`né(e) le ${formatDate(getVal("date_naiss"))} à ${getVal("lieu_naiss")}`, x+110, y);
     y+=6;
     
-    pdf.text("➢ Qui demeurait à : ", x+5, y);
+    pdf.text("> Qui demeurait à : ", x+5, y);
     pdf.setFont("helvetica", "bold");
-    pdf.text(getVal("adresse_fr"), x+40, y);
+    // Adresse coupée si trop longue
+    pdf.text(pdf.splitTextToSize(getVal("adresse_fr"), 130), x+40, y);
     y+=6;
     
     pdf.setFont("helvetica", "normal");
-    pdf.text("➢ Décédé(e) le : ", x+5, y);
+    pdf.text("> Décédé(e) le : ", x+5, y);
     pdf.setFont("helvetica", "bold");
     pdf.text(`${formatDate(getVal("date_deces"))} à ${getVal("lieu_deces")}`, x+40, y);
     y += 15;
 
-    // --- 4. MANDATONS (OPERATEUR) ---
-    pdf.setFont("helvetica", "bold"); pdf.text("◾ Mandatons et donnons pouvoir à l'entreprise :", x, y); y+=5;
+    // --- 4. MANDATONS ---
+    pdf.setFont("helvetica", "bold"); 
+    pdf.rect(x, y-3, 2, 2, 'F'); // Petit carré noir dessiné
+    pdf.text("Mandatons et donnons pouvoir à l'entreprise :", x+5, y); y+=5;
     pdf.text("POMPES FUNEBRES SOLIDAIRE PERPIGNAN", 105, y, {align:"center"}); y+=6;
     
     pdf.setFont("helvetica", "normal"); pdf.setFontSize(9);
@@ -975,13 +976,9 @@ window.genererDemandeOuverture = function() {
     
     pdf.setFont("helvetica", "bold");
     pdf.text("Signature des déclarants", 130, y);
-    
-    // (Optionnel) Signature image si vous en avez une, sinon laisser vide
-    // if(signatureImage) pdf.addImage(...)
 
     pdf.save(`Ouverture_Sepulture_${getVal("nom")}.pdf`);
 };
-
 // --- 8. PV MISE EN BIERE (CORRECT) ---
 window.genererFermeture = function() {
     if(!logoBase64) chargerLogoBase64(); 
