@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PF Solidaire - Facturation V19</title>
+    <title>PF Solidaire - Facturation V21 (Finale)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -49,7 +49,7 @@
         .stat-value { font-size: 1.8rem; font-weight: 800; }
         .card-ca { color: #15803d; border-bottom: 4px solid #22c55e; } .card-depense { color: #b91c1c; border-bottom: 4px solid #ef4444; } .card-result { color: #1e40af; border-bottom: 4px solid #3b82f6; background: linear-gradient(to bottom right, #eff6ff, white); }
 
-        /* TABLES */
+        /* TABLES & LISTES */
         .compta-table { width: 100%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-collapse: collapse; }
         .compta-table th { background: #f8fafc; padding: 15px; text-align: left; color: #64748b; font-size: 0.85rem; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; cursor: pointer; }
         .compta-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
@@ -322,33 +322,38 @@
     setTimeout(chargerLogoBase64, 1000);
     
     // --- FONCTION PARTAGÉE : GÉNÉRATION DU CONTENU PDF ---
-    function genererContenuPDF(doc, data) {
-        if (logoBase64) { try { doc.addImage(logoBase64,'PNG', 15, 10, 20, 20); } catch(e){} }
+    // Cette fonction génère le PDF pour l'enregistrement ET la visualisation (sans bug 'doc')
+    function genererContenuPDF(pdfDoc, data) {
+        if (logoBase64) { try { pdfDoc.addImage(logoBase64,'PNG', 15, 10, 20, 20); } catch(e){} }
         
-        doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(34, 155, 76);
-        doc.text("POMPES FUNEBRES SOLIDAIRE PERPIGNAN", 40, 15);
-        doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(80);
-        doc.text("32 boulevard Léon Jean Grégory Thuir - Tél : 07.55.18.27.77", 40, 20);
+        // En-tête compacté
+        pdfDoc.setFont("helvetica","bold"); pdfDoc.setFontSize(11); pdfDoc.setTextColor(34, 155, 76);
+        pdfDoc.text("POMPES FUNEBRES SOLIDAIRE PERPIGNAN", 40, 15);
+        pdfDoc.setFontSize(8); pdfDoc.setFont("helvetica","normal"); pdfDoc.setTextColor(80);
+        pdfDoc.text("32 boulevard Léon Jean Grégory Thuir - Tél : 07.55.18.27.77", 40, 20);
         
-        doc.setFillColor(245, 245, 245); doc.roundedRect(110, 10, 85, 25, 2, 2, 'F');
-        doc.setFontSize(10); doc.setTextColor(0); doc.setFont("helvetica","bold");
-        doc.text(`${data.client.civility} ${data.client.nom}`, 115, 16);
-        doc.setFont("helvetica","normal"); doc.setFontSize(9);
-        doc.text(doc.splitTextToSize(data.client.adresse || "", 80), 115, 22);
+        // Cadre Client
+        pdfDoc.setFillColor(245, 245, 245); pdfDoc.roundedRect(110, 10, 85, 25, 2, 2, 'F');
+        pdfDoc.setFontSize(10); pdfDoc.setTextColor(0); pdfDoc.setFont("helvetica","bold");
+        pdfDoc.text(`${data.client.civility} ${data.client.nom}`, 115, 16);
+        pdfDoc.setFont("helvetica","normal"); pdfDoc.setFontSize(9);
+        pdfDoc.text(pdfDoc.splitTextToSize(data.client.adresse || "", 80), 115, 22);
         
+        // Info Document
         let y = 45;
-        doc.setFontSize(11); doc.setFont("helvetica","bold"); doc.setTextColor(34, 155, 76);
+        pdfDoc.setFontSize(11); pdfDoc.setFont("helvetica","bold"); pdfDoc.setTextColor(34, 155, 76);
         const typeDoc = data.info.type; const numDoc = data.info.numero;
-        doc.text(`${typeDoc} N° ${numDoc}`, 15, y);
+        pdfDoc.text(`${typeDoc} N° ${numDoc}`, 15, y);
         
-        doc.setTextColor(0); doc.setFont("helvetica","normal");
+        pdfDoc.setTextColor(0); pdfDoc.setFont("helvetica","normal");
         const dateStr = data.info.date ? data.info.date.split('-').reverse().join('/') : "";
-        doc.text(`Date : ${dateStr}`, 80, y);
+        pdfDoc.text(`Date : ${dateStr}`, 80, y);
         
-        doc.setFont("helvetica","bold");
-        doc.text(`DÉFUNT : ${data.defunt.civility} ${data.defunt.nom}`, 130, y); 
+        pdfDoc.setFont("helvetica","bold");
+        pdfDoc.text(`DÉFUNT : ${data.defunt.civility} ${data.defunt.nom}`, 130, y); 
         y += 6;
 
+        // Tableau compact
         const rows = [];
         if(data.lignes) {
             data.lignes.forEach(l => {
@@ -361,7 +366,7 @@
             });
         }
         
-        doc.autoTable({
+        pdfDoc.autoTable({
             startY: y,
             head: [['DÉSIGNATION', 'TVA', 'COURANT', 'OPTIONNEL']],
             body: rows,
@@ -371,66 +376,68 @@
             columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' } }
         });
         
-        let finalY = doc.lastAutoTable.finalY + 5;
-        if (finalY > 230) { doc.addPage(); finalY = 20; }
+        // Gestion fin de page
+        let finalY = pdfDoc.lastAutoTable.finalY + 5;
+        if (finalY > 230) { pdfDoc.addPage(); finalY = 20; }
 
-        // RIB
-        doc.setDrawColor(200); doc.setFillColor(250);
-        doc.roundedRect(15, finalY, 90, 25, 1, 1, 'FD');
-        doc.setFontSize(8); doc.setTextColor(100);
-        doc.text("COORDONNÉES BANCAIRES (RIB) :", 18, finalY + 5);
-        doc.setFontSize(9); doc.setTextColor(0); doc.setFont("helvetica", "bold");
-        doc.text("FR76 1660 7000 0738 2217 4454 393", 18, finalY + 12);
+        // --- BLOC RIB (Gauche) ---
+        pdfDoc.setDrawColor(200); pdfDoc.setFillColor(250);
+        pdfDoc.roundedRect(15, finalY, 90, 25, 1, 1, 'FD');
+        pdfDoc.setFontSize(8); pdfDoc.setTextColor(100);
+        pdfDoc.text("COORDONNÉES BANCAIRES (RIB) :", 18, finalY + 5);
+        pdfDoc.setFontSize(9); pdfDoc.setTextColor(0); pdfDoc.setFont("helvetica", "bold");
+        pdfDoc.text("FR76 1660 7000 0738 2217 4454 393", 18, finalY + 12);
 
-        // Totaux
+        // --- BLOC TOTAUX (Droite) ---
         const total = parseFloat(data.info.total);
         const paye = data.paiements ? data.paiements.reduce((sum, p) => sum + p.montant, 0) : 0;
         const reste = total - paye;
         
         let curY = finalY + 5;
-        doc.setFontSize(9); doc.setTextColor(0);
-        doc.text("Total TTC :", 130, curY); doc.text(total.toFixed(2) + " €", 190, curY, {align:'right'}); curY+=5;
+        pdfDoc.setFontSize(9); pdfDoc.setTextColor(0);
+        pdfDoc.text("Total TTC :", 130, curY); pdfDoc.text(total.toFixed(2) + " €", 190, curY, {align:'right'}); curY+=5;
         
         if(data.paiements && data.paiements.length > 0) {
-            doc.setFontSize(7); doc.setTextColor(100);
+            pdfDoc.setFontSize(7); pdfDoc.setTextColor(100);
             data.paiements.forEach(p => {
-                doc.text(`Reçu (${p.mode}) :`, 130, curY);
-                doc.text(`-${p.montant.toFixed(2)} €`, 190, curY, {align:'right'}); curY+=4;
+                pdfDoc.text(`Reçu (${p.mode}) :`, 130, curY);
+                pdfDoc.text(`-${p.montant.toFixed(2)} €`, 190, curY, {align:'right'}); curY+=4;
             });
             curY+=2;
         }
         
-        doc.setDrawColor(34, 155, 76); doc.setLineWidth(0.5); doc.rect(125, curY-4, 70, 10);
-        doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(34, 155, 76);
-        doc.text("RESTE À PAYER :", 128, curY+3); doc.text(reste.toFixed(2) + " €", 192, curY+3, {align:'right'});
+        pdfDoc.setDrawColor(34, 155, 76); pdfDoc.setLineWidth(0.5); pdfDoc.rect(125, curY-4, 70, 10);
+        pdfDoc.setFontSize(11); pdfDoc.setFont("helvetica", "bold"); pdfDoc.setTextColor(34, 155, 76);
+        pdfDoc.text("RESTE À PAYER :", 128, curY+3); pdfDoc.text(reste.toFixed(2) + " €", 192, curY+3, {align:'right'});
 
+        // Pied de page
         let footerY = Math.max(finalY + 30, curY + 15);
-        if (footerY > 260) { doc.addPage(); footerY = 20; }
+        if (footerY > 260) { pdfDoc.addPage(); footerY = 20; }
 
-        doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(220, 38, 38); 
-        doc.text("NB :", 15, footerY); doc.setTextColor(0); doc.setFont("helvetica", "normal"); 
-        doc.text("- (NA) TVA non applicable, art 293 B du CGI - (*) Prestations obligatoires", 25, footerY);
+        pdfDoc.setFontSize(8); pdfDoc.setFont("helvetica", "bold"); pdfDoc.setTextColor(220, 38, 38); 
+        pdfDoc.text("NB :", 15, footerY); pdfDoc.setTextColor(0); pdfDoc.setFont("helvetica", "normal"); 
+        pdfDoc.text("- (NA) TVA non applicable, art 293 B du CGI - (*) Prestations obligatoires", 25, footerY);
         
         if (typeDoc === 'DEVIS') {
             footerY += 5;
-            doc.setDrawColor(0); doc.setLineWidth(0.2); doc.rect(15, footerY, 180, 25);
-            doc.text("Bon pour accord, le ......................... à .........................", 20, footerY + 6);
-            doc.text("Signature (précédée de 'Lu et approuvé') :", 20, footerY + 12);
-            doc.setFontSize(7);
-            doc.text("Validité du devis : 3 mois.", 150, footerY + 22, {align:"right"});
+            pdfDoc.setDrawColor(0); pdfDoc.setLineWidth(0.2); pdfDoc.rect(15, footerY, 180, 25);
+            pdfDoc.text("Bon pour accord, le ......................... à .........................", 20, footerY + 6);
+            pdfDoc.text("Signature (précédée de 'Lu et approuvé') :", 20, footerY + 12);
+            pdfDoc.setFontSize(7);
+            pdfDoc.text("Validité du devis : 3 mois.", 150, footerY + 22, {align:"right"});
         }
     }
 
-    // --- VISUALISATION PDF (CORRIGÉE : Utilisation de 'pdf' au lieu de 'doc') ---
+    // --- VISUALISATION PDF (OEIL) - CORRIGÉE (pdfDoc) ---
     window.visualiserPDF = async function(id) {
         try {
             const docRef = doc(db, "factures_v2", id);
             const docSnap = await getDoc(docRef);
             if(!docSnap.exists()) return alert("Document introuvable");
             
-            const pdf = new window.jspdf.jsPDF(); // On utilise 'pdf' ici
-            genererContenuPDF(pdf, docSnap.data());
-            window.open(pdf.output('bloburl'), '_blank');
+            const pdfDoc = new window.jspdf.jsPDF(); // On utilise 'pdfDoc' pour éviter le conflit
+            genererContenuPDF(pdfDoc, docSnap.data());
+            window.open(pdfDoc.output('bloburl'), '_blank');
         } catch(e) { alert("Erreur : " + e.message); }
     };
 
@@ -474,9 +481,9 @@
             info: { type: document.getElementById('doc_type').value, date: document.getElementById('doc_date').value, numero: document.getElementById('doc_numero').value, total: parseFloat(document.getElementById('total_display').innerText) }, 
             lignes: lignes, paiements: paiements 
         };
-        const pdf = new window.jspdf.jsPDF();
-        genererContenuPDF(pdf, tempData);
-        pdf.save(`${tempData.info.type}_${tempData.info.numero}.pdf`);
+        const pdfDoc = new window.jspdf.jsPDF(); // Renommé ici aussi
+        genererContenuPDF(pdfDoc, tempData);
+        pdfDoc.save(`${tempData.info.type}_${tempData.info.numero}.pdf`);
     });
 
     // --- DASHBOARD UPDATE ---
@@ -541,7 +548,7 @@
     window.marquerCommeRegle = async function(id) { if(confirm("Confirmer paiement ?")) { try { await updateDoc(doc(db, "depenses", id), { statut: "Réglé", date_reglement: new Date().toISOString().split('T')[0] }); window.chargerDepenses(); } catch(e) { alert("Erreur : " + e.message); } } };
     window.supprimerDepense = async function(id) { if(confirm("Supprimer ?")) { await deleteDoc(doc(db, "depenses", id)); window.chargerDepenses(); } };
 
-    // --- LIENS INTELLIGENTS ---
+    // --- LISTE FACTURES ---
     window.chargerListeFactures = async function() {
         const tbody = document.getElementById('list-body'); tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Chargement...</td></tr>';
         try {
@@ -562,7 +569,7 @@
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="link-doc" onclick="window.chargerDocument('${docSnap.id}')" title="Ouvrir Document"><strong>${numDoc}</strong></td>
+                    <td class="link-doc" onclick="window.chargerDocument('${docSnap.id}')" title="Modifier/Imprimer"><strong>${numDoc}</strong></td>
                     <td>${dateDoc.toLocaleDateString()}</td>
                     <td><span class="badge ${typeClass}">${typeDoc}</span></td>
                     <td class="link-client" onclick="window.location.href='${linkClient}'" title="Voir Dossier Client"><strong>${nomClient}</strong></td>
@@ -571,7 +578,7 @@
                     <td style="text-align:right; font-weight:bold; color:${reste > 0 ? '#b91c1c' : '#15803d'};">${reste.toFixed(2)} €</td>
                     <td style="text-align:center; white-space:nowrap;">
                         <button class="btn-icon" style="color:#3b82f6; border:none; background:none; cursor:pointer; font-size:1.1rem; margin-right:10px;" onclick="window.visualiserPDF('${docSnap.id}')" title="Visualiser PDF"><i class="fas fa-eye"></i></button>
-                        <button class="btn-icon" style="color:#ef4444; border:none; background:none; cursor:pointer; font-size:1.1rem;" onclick="window.supprimerDocument('${docSnap.id}')" title="Supprimer définitivement"><i class="fas fa-trash"></i></button>
+                        <button class="btn-icon" style="color:#ef4444; border:none; background:none; cursor:pointer; font-size:1.1rem;" onclick="window.supprimerDocument('${docSnap.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
                     </td>`;
                 tbody.appendChild(tr);
             });
