@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>test 2 PF Solidaire - Facturation V19 (Visualisation)</title>
+    <title> PF TEST - Facturation V19 (Visualisation)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -220,8 +220,10 @@
                     </div>
                     <div style="width:100%; margin-bottom:10px;"><label>Détails / Note</label><input type="text" id="dep_details" placeholder="Détails..." style="width:100%;"></div>
                     <div style="width:100%; display:flex; gap:15px; align-items:flex-end;">
-                        <div class="form-group" style="flex:1;"><label>Catégorie</label><select id="dep_cat"><option disabled selected>-- Choisir --</option><optgroup label="Marchandises"><option>Achat Cercueils</option><option>Achat Urnes</option><option>Achat Fleurs / Plaques</option></optgroup><optgroup label="Frais Généraux"><option>Loyer / Charges</option><option>Électricité / Eau</option><option>Assurance Pro</option></optgroup><optgroup label="Véhicules"><option>Carburant / Péage</option><option>Entretien Véhicules</option></optgroup><optgroup label="Divers"><option>Salaires</option><option>Impôts</option><option>Autre</option></optgroup></select></div>
-                        <div class="form-group" style="flex:1;"><label>Paiement</label><select id="dep_mode"><option>Virement</option><option>CB</option><option>Chèque</option><option>Espèces</option></select></div>
+                        <div class="form-group" style="flex:1;"><label>Catégorie</label><select id="dep_cat"><option disabled selected>-- Choisir --</option><optgroup label="Marchandises">
+						<option>Achat Cercueils</option><option>Achat Urnes</option><option>Achat Fleurs / Plaques</option></optgroup><optgroup label="Frais Généraux"><option>Loyer / Charges</option><option>Frais de fret</option><option>Électricité / Eau</option><option>Assurance Pro</option></optgroup><optgroup label="Véhicules"><option>Carburant / Péage</option><option>Entretien Véhicules</option></optgroup><optgroup label="Divers"><option>Salaires</option><option>Impôts</option><option>Autre</option></optgroup></select></div>
+                        <div class="form-group" style="flex:1;"><label>Paiement</label><select id="dep_mode">
+						<option>Virement</option><option>CB</option><option>Chèque</option><option>Espèces</option></select></div>
                         <div class="form-group" style="flex:1;"><label>Statut</label><select id="dep_statut"><option value="Réglé">✅ Réglé</option><option value="En attente">⏳ En attente</option></select></div>
                         <div class="form-group" style="flex:1;"><label>Montant TTC</label><input type="number" id="dep_montant" placeholder="0.00"></div>
                         <button id="btn-action-depense" class="btn btn-red" onclick="window.gererDepense()" style="height:40px; margin-bottom:1px; min-width:120px;"><i class="fas fa-plus"></i> SAUVER</button>
@@ -366,7 +368,7 @@
         doc.text(`DÉFUNT : ${data.defunt.civility || ''} ${data.defunt.nom || ''}`, 130, y); 
         y += 8;
 
-        // 2. TABLEAU COMPACT
+        // 2. TABLEAU
         const rows = [];
         if(data.lignes) {
             data.lignes.forEach(l => {
@@ -402,8 +404,7 @@
         doc.text("Total TTC :", 140, curY + 5); 
         doc.text(total.toFixed(2) + " €", 195, curY + 5, {align:'right'}); 
         
-        // --- C'EST ICI LA CORRECTION POUR AFFICHER LES PAIEMENTS ---
-        let yReste = curY + 12; // Position de base du Reste à Payer
+        let yReste = curY + 12;
         
         if(data.paiements && data.paiements.length > 0) {
             let yPay = curY + 10;
@@ -411,17 +412,14 @@
             
             data.paiements.forEach(p => {
                 const dateP = p.date ? new Date(p.date).toLocaleDateString() : "";
-                // Affiche la ligne : "Reçu le ... (Mode) : - XX €"
                 doc.text(`Reçu le ${dateP} (${p.mode}) :`, 140, yPay);
                 doc.text(`- ${parseFloat(p.montant).toFixed(2)} €`, 195, yPay, {align:'right'});
-                yPay += 4; // On descend pour la ligne suivante
+                yPay += 4;
             });
-            
-            // On décale le cadre "Reste à payer" plus bas selon le nombre de paiements
             yReste = yPay + 5;
         }
 
-        // Reste à Payer (Cadre Vert)
+        // Cadre Reste à Payer
         doc.setDrawColor(...greenColor); doc.setLineWidth(0.5); doc.rect(138, yReste - 5, 58, 10);
         doc.setTextColor(...greenColor); doc.setFontSize(10); doc.setFont("helvetica", "bold");
         doc.text("RESTE À PAYER :", 140, yReste + 2); 
@@ -429,10 +427,12 @@
 
         // --- 4. BLOCS SPÉCIFIQUES ---
         if (typeDoc === 'FACTURE') {
+            // MODE FACTURE (Cadre RIB réduit)
             if (curY + 45 > 280) { doc.addPage(); curY = 20; yReste = 20; }
             
+            // Hauteur du cadre réduite à 38 (au lieu de 45)
             doc.setDrawColor(200); doc.setFillColor(250, 250, 250);
-            doc.rect(15, curY, 115, 45, 'FD');
+            doc.rect(15, curY, 115, 38, 'FD'); 
 
             doc.setFontSize(9); doc.setTextColor(...greenColor); doc.setFont("helvetica", "bold");
             doc.text(`Somme de ${reste.toFixed(2)} € à payer dès réception de la facture.`, 18, curY + 6);
@@ -442,12 +442,14 @@
             
             doc.setFont("helvetica", "normal");
             doc.text("Banque : BANQUE POPULAIRE DU SUD", 18, curY + 19);
-            doc.text("Titulaire : POMPES FUNEBRES SOLIDAIRE", 18, curY + 24);
+            doc.text("Titulaire : EI POMPES FUNEBRES SOLIDAIRE", 18, curY + 24);
             doc.text("IBAN : FR76 1660 7000 0738 2217 4454 393", 18, curY + 29);
-                   
-            curY += 50;
+            doc.text("BIC : CCBPFRPPPPG", 18, curY + 34);
+            
+            curY += 45; // Espace réduit après le bloc
 
         } else {
+            // MODE DEVIS (Signature)
              if (curY + 45 > 285) { doc.addPage(); curY = 20; }
              
              let ySig = Math.max(curY, yReste + 10) + 5; 
@@ -471,7 +473,8 @@
         doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(220, 38, 38);
         doc.text("NB :", 15, footerY); doc.setTextColor(0); doc.setFont("helvetica", "normal");
         doc.text("- (NA) TVA non applicable, art 293 B du CGI", 25, footerY);
-                
+        doc.text("- (*) Prestations et fournitures obligatoires", 25, footerY + 4);
+        
         if (typeDoc === 'DEVIS') {
              footerY += 9;
              doc.setFont("helvetica", "bold"); doc.setFontSize(7);
@@ -605,7 +608,7 @@
     chargerSuggestionsClients();
     window.remplirInfosClient = function() { const nomSaisi = document.getElementById('client_nom').value; const dossierTrouve = dossiersCache.find(d => d.mandant && d.mandant.nom === nomSaisi); if(dossierTrouve) { document.getElementById('client_civility').value = dossierTrouve.mandant.civility || "M."; document.getElementById('client_adresse').value = dossierTrouve.mandant.adresse || ""; if(!document.getElementById('defunt_nom').value && dossierTrouve.defunt) { document.getElementById('defunt_nom').value = dossierTrouve.defunt.nom || ""; document.getElementById('defunt_civility').value = dossierTrouve.defunt.civility || "M."; } } };
     document.getElementById('search-input').addEventListener('keyup', (e) => { const term = e.target.value.toLowerCase(); document.querySelectorAll('#list-body tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none'; }); });
-    window.ajouterPaiement = function() { const date = document.getElementById('pay_date').value; const mode = document.getElementById('pay_mode').value; const montant = parseFloat(document.getElementById('pay_amount').value); if(!date || isNaN(montant) || montant <= 0) return alert("Montant ou date invalide."); paiements.push({ date, mode, montant }); document.getElementById('pay_amount').value = ""; window.renderPaiements(); window.calculTotal(); };
+    window.ajouterPaiement = function() { const date = document.getElementById('pay_date').value; const mode = document.getElementById('pay_mode').value; const montant = parseFloat(document.getElementById('pay_amount').value); if(!date || isNaN(mont) || montant <= 0) return alert("Montant ou date invalide."); paiements.push({ date, mode, montant }); document.getElementById('pay_amount').value = ""; window.renderPaiements(); window.calculTotal(); };
     window.supprimerPaiement = function(index) { if(confirm("Supprimer ce paiement ?")) { paiements.splice(index, 1); window.renderPaiements(); window.calculTotal(); } };
     window.renderPaiements = function() { const div = document.getElementById('liste_paiements'); if(paiements.length === 0) { div.innerHTML = '<small style="color:#888;">Aucun paiement.</small>'; return; } div.innerHTML = ''; paiements.forEach((p, index) => { div.innerHTML += `<div class="payment-item"><span>${new Date(p.date).toLocaleDateString()} - ${p.mode}</span><strong>${p.montant.toFixed(2)} € <i class="fas fa-trash" style="color:red; cursor:pointer; margin-left:10px;" onclick="window.supprimerPaiement(${index})"></i></strong></div>`; }); };
     async function genererNumero(type) { const q = query(collection(db, "factures_v2")); const snap = await getDocs(q); const count = snap.size + 1; const year = new Date().getFullYear(); const prefix = (type === 'DEVIS') ? 'D' : 'F'; return `${prefix}-${year}-${String(count).padStart(3, '0')}`; }
