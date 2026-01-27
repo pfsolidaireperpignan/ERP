@@ -510,7 +510,30 @@
             pdf.setDrawColor(34, 155, 76); pdf.setLineWidth(0.5); pdf.rect(125, curY-4, 70, 10);
             pdf.setFontSize(11); pdf.setFont("helvetica", "bold"); pdf.setTextColor(34, 155, 76);
             pdf.text("RESTE À PAYER :", 128, curY+3); pdf.text(reste.toFixed(2) + " €", 192, curY+3, {align:'right'});
-            
+            // --- AJOUT CADRE DEVIS (Je soussigné) ---
+            if (data.info.type === 'DEVIS') {
+                let footerY = curY + 30;
+                // Si on arrive trop bas, on crée une nouvelle page
+                if (footerY + 50 > 280) { pdf.addPage(); footerY = 20; }
+                
+                // Dessin du cadre
+                pdf.setDrawColor(0); pdf.setLineWidth(0.5); pdf.rect(15, footerY, 180, 40);
+                
+                // Textes
+                pdf.setFontSize(9); pdf.setTextColor(0); pdf.setFont("helvetica", "normal");
+                pdf.text("Je soussigné(e),", 20, footerY + 8);
+                pdf.text("accepte le présent devis prévisionnel.", 130, footerY + 8);
+                
+                pdf.text("Le ........................................", 20, footerY + 16);
+                pdf.text("à ........................................", 80, footerY + 16);
+                
+                pdf.text("Signature précédée de la mention \"Lu et approuvé, bon pour acceptation\"", 20, footerY + 24);
+                
+                // Mention légale en petit
+                pdf.setFont("helvetica", "bold"); pdf.setFontSize(8);
+                const mention = "Conformément à l'article 5 de l'arrêté du 11 janvier 1999, lorsque le devis est accepté, un bon de commande est alors établi et signé par le client.";
+                pdf.text(pdf.splitTextToSize(mention, 170), 20, footerY + 32);
+            }
             // Ouvrir dans un nouvel onglet
             window.open(pdf.output('bloburl'), '_blank');
             
