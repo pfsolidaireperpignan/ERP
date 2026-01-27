@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PF Solidaire - Facturation V19 (Visualisation)</title>
+    <title>PF Solidaire -  (eXPORT EXCEL)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -539,6 +539,84 @@
         } catch(e) { console.error(e); alert("Erreur visualisation : " + e.message); }
     };
 
+// --- 1. FONCTION UTILITAIRE : TÉLÉCHARGER LE CSV ---
+    window.downloadCSV = function(content, fileName) {
+        const encodedUri = encodeURI("data:text/csv;charset=utf-8,\uFEFF" + content);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // --- 2. FONCTION PRINCIPALE : EXPORT INTELLIGENT ---
+    window.exporterExcelSmart = async function() {
+        const isAchats = !document.getElementById('tab-achats').classList.contains('hidden');
+
+        if (isAchats) {
+            // === EXPORT DES ACHATS ===
+            if(!confirm("Exporter le Journal des ACHATS (Excel) ?")) return;
+            
+            if (!cacheDepenses || cacheDepenses.length === 0) {
+                return alert("Aucune donnée à exporter. Veuillez charger le tableau.");
+            }
+
+            let csv = "DATE;REFERENCE;FOURNISSEUR;CATEGORIE;DETAILS;PAIEMENT;STATUT;MONTANT TTC\n";
+            
+            cacheDepenses.forEach(d => {
+                const date = d.date ? new Date(d.date).toLocaleDateString() : "-";
+                const ref = (d.reference || "").replace(/;/g, " "); 
+                const fourn = (d.fournisseur || "").replace(/;/g, " ");
+                const cat = (d.categorie || "").replace(/;/g, " ");
+                const det = (d.details || "").replace(/;/g, " ");
+                const pay = d.mode || "";
+                const stat = d.statut || "";
+                const mt = (d.montant || 0).toFixed(2).replace('.', ','); 
+                
+                csv += `${date};${ref};${fourn};${cat};${det};${pay};${stat};${mt}\n`;
+            });
+            
+            window.downloadCSV(csv, "Journal_Achats_PF.csv");
+
+        } else {
+            // === EXPORT DES FACTURES (VENTES) ===
+            if(!confirm("Exporter le Journal des VENTES (Factures Clients) ?")) return;
+
+            try {
+                const q = query(collection(db, "factures_v2"), orderBy("date_creation", "desc"));
+                const snap = await getDocs(q);
+                
+                if (snap.empty) return alert("Aucun document trouvé.");
+
+                let csv = "NUMERO;DATE;TYPE;CLIENT;DEFUNT;TOTAL TTC;RESTE A PAYER\n";
+                
+                snap.forEach(docSnap => {
+                    const d = docSnap.data();
+                    const num = d.info?.numero || "";
+                    const date = d.info?.date ? new Date(d.info.date).toLocaleDateString() : "";
+                    const type = d.info?.type || "DEVIS";
+                    const cli = (d.client?.nom || "").replace(/;/g, " ");
+                    const def = (d.defunt?.nom || "").replace(/;/g, " ");
+                    
+                    const total = (d.info?.total || 0);
+                    const dejaPaye = d.paiements ? d.paiements.reduce((acc, p) => acc + p.montant, 0) : 0;
+                    const reste = total - dejaPaye;
+
+                    const totalStr = total.toFixed(2).replace('.', ',');
+                    const resteStr = reste.toFixed(2).replace('.', ',');
+
+                    csv += `${num};${date};${type};${cli};${def};${totalStr};${resteStr}\n`;
+                });
+
+                window.downloadCSV(csv, "Journal_Ventes_PF.csv");
+
+            } catch(e) {
+                console.error(e);
+                alert("Erreur lors de l'export : " + e.message);
+            }
+        }
+    };
     // --- RESTE DU CODE (FONCTIONNEL & INCHANGÉ) ---
     function updateFinancialDashboard() {
         document.getElementById('stat-ca').innerText = global_CA.toFixed(2) + " €";
