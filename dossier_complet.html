@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PF Solidaire - Atelier Dossier (V29)</title>
+    <title>PF Solidaire - Atelier Dossier (V30 - Split)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -59,7 +59,15 @@
         .file-icon { width: 45px; height: 45px; background: #eff6ff; color: var(--secondary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
         .img-icon { background: #fdf2f8; color: #db2777; }
         
-        .btn-del { border: none; background: #fef2f2; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; color: #ef4444; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        /* Actions */
+        .file-actions { display: flex; gap: 10px; }
+        
+        .btn-mini { border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        
+        .btn-split { background: #e0f2fe; color: #0284c7; }
+        .btn-split:hover { background: #bae6fd; transform: translateY(-2px); }
+        
+        .btn-del { background: #fef2f2; color: #ef4444; }
         .btn-del:hover { background: #fee2e2; }
 
         .btn-fusion { 
@@ -120,7 +128,7 @@
         <div class="header-fusion">
             <div>
                 <h2 style="margin-bottom:5px;"><i class="fas fa-tools" style="color:#ea580c;"></i> Atelier de Fusion</h2>
-                <p style="margin:0; color:#64748b; font-size:0.9rem;">Assemblez vos PDF (Devis, CNI, Mandats...) en un seul dossier complet.</p>
+                <p style="margin:0; color:#64748b; font-size:0.9rem;">1. Ajoutez vos fichiers. 2. Divisez les PDF si besoin. 3. Fusionnez !</p>
             </div>
             <button id="btn-merge" class="btn-fusion" onclick="fusionnerTout()" disabled>
                 <i class="fas fa-file-pdf"></i> TÉLÉCHARGER LE DOSSIER
@@ -155,25 +163,17 @@
         onAuthStateChanged(auth, (user) => {
             const loader = document.getElementById('app-loader');
             if (user) {
-                // Connecté : On cache le loader
-                if(loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 500);
-                }
+                if(loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 500); }
             } else {
-                // Pas connecté : Retour à la case départ
                 window.location.href = "index.html";
             }
         });
 
-        // 3. DÉCONNEXION
         window.logout = function() {
-            if(confirm("Se déconnecter ?")) {
-                signOut(auth).then(() => window.location.href = "index.html");
-            }
+            if(confirm("Se déconnecter ?")) { signOut(auth).then(() => window.location.href = "index.html"); }
         };
 
-        // 4. GESTION MENU
+        // 3. MENU
         window.toggleSidebar = function() {
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.getElementById('mobile-overlay');
@@ -193,38 +193,23 @@
             }
         };
 
-        // 5. GESTION DRAG & DROP (LA CORRECTION EST ICI)
+        // 4. GESTION DRAG & DROP
         const dropZone = document.getElementById('drop-zone');
-
-        // Empêcher le comportement par défaut (ouvrir le fichier dans le navigateur)
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, preventDefaults, false);
+            dropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
         });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        // Effets visuels
         ['dragenter', 'dragover'].forEach(eventName => {
             dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
         });
-
         ['dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
         });
-
-        // Traitement du lâcher (Drop)
-        dropZone.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
+        dropZone.addEventListener('drop', (e) => {
             const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        }
+            handleFiles(dt.files);
+        }, false);
 
-        // 6. LOGIQUE ATELIER (Fusion)
+        // 5. LOGIQUE ATELIER
         let fichiers = []; 
 
         const el = document.getElementById('fileList');
@@ -263,6 +248,11 @@
                 const faIcon = isPdf ? 'fa-file-pdf' : 'fa-file-image';
                 const size = (file.size / 1024 / 1024).toFixed(2) + ' Mo';
 
+                // BOUTON CISEAUX seulement pour les PDF
+                const splitBtn = isPdf 
+                    ? `<button class="btn-mini btn-split" onclick="window.diviserPdf(${index})" title="Diviser les pages"><i class="fas fa-cut"></i></button>`
+                    : '';
+
                 const html = `
                     <div class="file-item">
                         <i class="fas fa-grip-vertical drag-handle" title="Déplacer"></i>
@@ -273,7 +263,10 @@
                                 <div style="font-size:0.8rem; color:var(--gray);">${size}</div>
                             </div>
                         </div>
-                        <button class="btn-del" onclick="window.removeFile(${index})" title="Retirer"><i class="fas fa-trash"></i></button>
+                        <div class="file-actions">
+                            ${splitBtn}
+                            <button class="btn-mini btn-del" onclick="window.removeFile(${index})" title="Retirer"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>
                 `;
                 container.insertAdjacentHTML('beforeend', html);
@@ -285,11 +278,60 @@
             renderList();
         };
 
-        // MOTEUR PDF-LIB (FUSION)
+        // --- FONCTION DE DIVISION (NOUVEAU) ---
+        window.diviserPdf = async function(index) {
+            const file = fichiers[index];
+            if(file.type !== 'application/pdf') return;
+
+            // Feedback visuel (changer l'icône en chargement)
+            const btn = document.querySelectorAll('.btn-split')[index];
+            if(btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
+                const pageCount = pdf.getPageCount();
+
+                if(pageCount <= 1) {
+                    alert("Ce PDF ne contient qu'une seule page.");
+                    renderList();
+                    return;
+                }
+
+                if(!confirm(`Diviser ce document de ${pageCount} pages en ${pageCount} fichiers séparés ?`)) {
+                    renderList();
+                    return;
+                }
+
+                // Supprimer le fichier original
+                fichiers.splice(index, 1);
+
+                // Créer un fichier pour chaque page
+                for (let i = 0; i < pageCount; i++) {
+                    const newPdf = await PDFLib.PDFDocument.create();
+                    const [copiedPage] = await newPdf.copyPages(pdf, [i]);
+                    newPdf.addPage(copiedPage);
+                    const pdfBytes = await newPdf.save();
+                    
+                    const newFile = new File([pdfBytes], `${file.name.replace('.pdf','')} - Page ${i+1}.pdf`, { type: 'application/pdf' });
+                    // Insérer à la position index + i
+                    fichiers.splice(index + i, 0, newFile);
+                }
+
+                renderList();
+
+            } catch (e) {
+                console.error(e);
+                alert("Erreur lors de la division : " + e.message);
+                renderList();
+            }
+        };
+
+        // --- MOTEUR DE FUSION ---
         window.fusionnerTout = async function() {
             const btn = document.getElementById('btn-merge');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> TRAITEMENT EN COURS...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> TRAITEMENT...';
             btn.disabled = true;
             
             try {
