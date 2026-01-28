@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PF Solidaire - Atelier Dossier (V30 - Split)</title>
+    <title>PF Solidaire - Atelier Dossier (V31 - Preview)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -62,13 +62,16 @@
         /* Actions */
         .file-actions { display: flex; gap: 10px; }
         
-        .btn-mini { border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-mini { border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
         
-        .btn-split { background: #e0f2fe; color: #0284c7; }
-        .btn-split:hover { background: #bae6fd; transform: translateY(-2px); }
+        .btn-view { background: #eff6ff; color: #3b82f6; } /* Bleu pour Voir */
+        .btn-view:hover { background: #3b82f6; color: white; }
+
+        .btn-split { background: #fff7ed; color: #ea580c; } /* Orange pour Diviser */
+        .btn-split:hover { background: #ea580c; color: white; }
         
-        .btn-del { background: #fef2f2; color: #ef4444; }
-        .btn-del:hover { background: #fee2e2; }
+        .btn-del { background: #fef2f2; color: #ef4444; } /* Rouge pour Supprimer */
+        .btn-del:hover { background: #ef4444; color: white; }
 
         .btn-fusion { 
             background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); 
@@ -128,7 +131,7 @@
         <div class="header-fusion">
             <div>
                 <h2 style="margin-bottom:5px;"><i class="fas fa-tools" style="color:#ea580c;"></i> Atelier de Fusion</h2>
-                <p style="margin:0; color:#64748b; font-size:0.9rem;">1. Ajoutez vos fichiers. 2. Divisez les PDF si besoin. 3. Fusionnez !</p>
+                <p style="margin:0; color:#64748b; font-size:0.9rem;">1. Ajoutez vos fichiers. 2. Vérifiez (👁️) et Divisez (✂️). 3. Fusionnez !</p>
             </div>
             <button id="btn-merge" class="btn-fusion" onclick="fusionnerTout()" disabled>
                 <i class="fas fa-file-pdf"></i> TÉLÉCHARGER LE DOSSIER
@@ -155,11 +158,10 @@
     <div id="mobile-overlay" onclick="toggleSidebar()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:4000;"></div>
 
     <script type="module">
-        // 1. IMPORTATION SÉCURITÉ & CONFIG
         import { auth } from './js/config.js'; 
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // 2. VÉRIFICATION CONNEXION
+        // VÉRIFICATION CONNEXION
         onAuthStateChanged(auth, (user) => {
             const loader = document.getElementById('app-loader');
             if (user) {
@@ -173,7 +175,6 @@
             if(confirm("Se déconnecter ?")) { signOut(auth).then(() => window.location.href = "index.html"); }
         };
 
-        // 3. MENU
         window.toggleSidebar = function() {
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.getElementById('mobile-overlay');
@@ -193,7 +194,7 @@
             }
         };
 
-        // 4. GESTION DRAG & DROP
+        // GESTION DRAG & DROP
         const dropZone = document.getElementById('drop-zone');
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
@@ -209,7 +210,7 @@
             handleFiles(dt.files);
         }, false);
 
-        // 5. LOGIQUE ATELIER
+        // LOGIQUE ATELIER
         let fichiers = []; 
 
         const el = document.getElementById('fileList');
@@ -248,7 +249,7 @@
                 const faIcon = isPdf ? 'fa-file-pdf' : 'fa-file-image';
                 const size = (file.size / 1024 / 1024).toFixed(2) + ' Mo';
 
-                // BOUTON CISEAUX seulement pour les PDF
+                // Boutons conditionnels
                 const splitBtn = isPdf 
                     ? `<button class="btn-mini btn-split" onclick="window.diviserPdf(${index})" title="Diviser les pages"><i class="fas fa-cut"></i></button>`
                     : '';
@@ -264,6 +265,7 @@
                             </div>
                         </div>
                         <div class="file-actions">
+                            <button class="btn-mini btn-view" onclick="window.previewFile(${index})" title="Voir"><i class="fas fa-eye"></i></button>
                             ${splitBtn}
                             <button class="btn-mini btn-del" onclick="window.removeFile(${index})" title="Retirer"><i class="fas fa-trash"></i></button>
                         </div>
@@ -278,13 +280,21 @@
             renderList();
         };
 
-        // --- FONCTION DE DIVISION (NOUVEAU) ---
+        // --- PREVIEW FILE (NOUVEAU) ---
+        window.previewFile = function(index) {
+            const file = fichiers[index];
+            const fileURL = URL.createObjectURL(file);
+            window.open(fileURL, '_blank');
+        };
+
+        // --- DIVISION PDF ---
         window.diviserPdf = async function(index) {
             const file = fichiers[index];
             if(file.type !== 'application/pdf') return;
 
-            // Feedback visuel (changer l'icône en chargement)
-            const btn = document.querySelectorAll('.btn-split')[index];
+            const btn = document.querySelectorAll('.btn-split')[index]; // On cible le bon bouton (si plusieurs)
+            // Correction : querySelectorAll peut renvoyer une liste qui ne correspond pas exactement aux index si on a filtré, mais ici on reconstruit tout, donc ça va.
+            // Sécurité : on prend l'élément cliqué via event.target si besoin, mais ici l'index est fiable car on re-render.
             if(btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             try {
@@ -303,19 +313,16 @@
                     return;
                 }
 
-                // Supprimer le fichier original
-                fichiers.splice(index, 1);
+                fichiers.splice(index, 1); // On enlève l'original
 
-                // Créer un fichier pour chaque page
                 for (let i = 0; i < pageCount; i++) {
                     const newPdf = await PDFLib.PDFDocument.create();
                     const [copiedPage] = await newPdf.copyPages(pdf, [i]);
                     newPdf.addPage(copiedPage);
                     const pdfBytes = await newPdf.save();
                     
-                    const newFile = new File([pdfBytes], `${file.name.replace('.pdf','')} - Page ${i+1}.pdf`, { type: 'application/pdf' });
-                    // Insérer à la position index + i
-                    fichiers.splice(index + i, 0, newFile);
+                    const newFile = new File([pdfBytes], `${file.name.replace('.pdf','')} - P${i+1}.pdf`, { type: 'application/pdf' });
+                    fichiers.splice(index + i, 0, newFile); // On insère à la suite
                 }
 
                 renderList();
@@ -327,7 +334,7 @@
             }
         };
 
-        // --- MOTEUR DE FUSION ---
+        // --- FUSION ---
         window.fusionnerTout = async function() {
             const btn = document.getElementById('btn-merge');
             const originalText = btn.innerHTML;
