@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PF Solidaire - Atelier Dossier</title>
+    <title>PF Solidaire - Atelier Dossier (V29)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -41,9 +41,9 @@
         
         /* ZONE UPLOAD */
         .upload-zone { border: 2px dashed #cbd5e1; border-radius: 16px; padding: 40px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.3s; margin-bottom: 25px; }
-        .upload-zone:hover { border-color: var(--secondary); background: #eff6ff; }
+        .upload-zone:hover, .upload-zone.drag-over { border-color: var(--secondary); background: #eff6ff; transform: scale(1.01); }
         .upload-zone i { font-size: 3rem; color: #94a3b8; margin-bottom: 15px; transition: 0.3s; }
-        .upload-zone:hover i { color: var(--secondary); transform: translateY(-5px); }
+        .upload-zone:hover i, .upload-zone.drag-over i { color: var(--secondary); transform: translateY(-5px); }
         
         /* LISTE FICHIERS */
         .file-list { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow: hidden; min-height: 100px; }
@@ -127,11 +127,11 @@
             </button>
         </div>
 
-        <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('fileInput').click()">
             <input type="file" id="fileInput" multiple accept=".pdf, .jpg, .jpeg, .png" style="display:none" onchange="handleFiles(this.files)">
             <i class="fas fa-cloud-upload-alt"></i>
-            <h3 style="margin:0; font-size:1.1rem; color:#1e293b;">Cliquez ou déposez vos documents ici</h3>
-            <p style="margin-top:5px; color:#94a3b8; font-size:0.9rem;">(Formats acceptés : PDF, JPG, PNG)</p>
+            <h3 style="margin:0; font-size:1.1rem; color:#1e293b;">Glissez vos fichiers ici ou cliquez</h3>
+            <p style="margin-top:5px; color:#94a3b8; font-size:0.9rem;">(PDF, JPG, PNG)</p>
         </div>
 
         <div id="fileList" class="file-list">
@@ -193,7 +193,38 @@
             }
         };
 
-        // 5. LOGIQUE ATELIER (Fusion)
+        // 5. GESTION DRAG & DROP (LA CORRECTION EST ICI)
+        const dropZone = document.getElementById('drop-zone');
+
+        // Empêcher le comportement par défaut (ouvrir le fichier dans le navigateur)
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Effets visuels
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
+        });
+
+        // Traitement du lâcher (Drop)
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        // 6. LOGIQUE ATELIER (Fusion)
         let fichiers = []; 
 
         const el = document.getElementById('fileList');
@@ -254,7 +285,7 @@
             renderList();
         };
 
-        // MOTEUR PDF-LIB
+        // MOTEUR PDF-LIB (FUSION)
         window.fusionnerTout = async function() {
             const btn = document.getElementById('btn-merge');
             const originalText = btn.innerHTML;
