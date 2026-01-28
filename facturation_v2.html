@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> P.F.S - Facturation </title>
+    <title> PF S - Facturation </title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -309,8 +309,19 @@
     <button id="mobile-menu-btn" onclick="window.toggleSidebar()"><i class="fas fa-bars"></i></button>
     <div id="mobile-overlay" onclick="window.toggleSidebar()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:4000;"></div>
 <script type="module">
-    import { db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, getDoc } from "./js/config.js";
+    // 1. IMPORTS (Ajout de 'auth' et 'onAuthStateChanged' pour la sécurité)
+    import { db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, getDoc, auth } from "./js/config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+    // --- SÉCURITÉ : REDIRECTION SI PAS CONNECTÉ ---
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            // Si l'utilisateur n'est pas connecté, on le renvoie à l'accueil
+            window.location.href = "index.html";
+        }
+    });
+
+    // --- VARIABLES GLOBALES ---
     let logoBase64 = null;
     let paiements = [];
     let dossiersCache = [];
@@ -330,7 +341,7 @@
     }
     setTimeout(chargerLogoBase64, 1000);
 
-    // --- MOTEUR PDF UNIQUE ---
+    // --- MOTEUR PDF UNIQUE (SÉCURISÉ & CORRIGÉ) ---
     window.generatePDFFromData = function(data, saveMode = false) {
         if(!logoBase64) chargerLogoBase64();
         const { jsPDF } = window.jspdf;
@@ -339,6 +350,7 @@
         // 1. EN-TÊTE
         if (logoBase64) { try { doc.addImage(logoBase64,'PNG', 15, 10, 25, 25); } catch(e){} }
         
+        // Vert Foncé PF Solidaire
         const greenColor = [34, 155, 76]; 
         
         doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...greenColor);
@@ -354,7 +366,7 @@
         doc.setFont("helvetica","normal"); doc.setFontSize(9);
         doc.text(doc.splitTextToSize(data.client.adresse || "", 80), 115, 24);
 
-        // Titres
+        // Titres Document
         let y = 65; doc.setFontSize(12); doc.setFont("helvetica","bold"); doc.setTextColor(...greenColor);
         const typeDoc = data.info.type || "DOCUMENT";
         const numDoc = data.info.numero || "";
@@ -368,11 +380,12 @@
         doc.text(`DÉFUNT : ${data.defunt.civility || ''} ${data.defunt.nom || ''}`, 130, y); 
         y += 8;
 
-        // 2. TABLEAU
+        // 2. TABLEAU COMPACT (VOS COULEURS)
         const rows = [];
         if(data.lignes) {
             data.lignes.forEach(l => {
                 if(l.type === 'section') {
+                    // Beige/Orange pour sections
                     rows.push([{ content: (l.text || "").toUpperCase(), colSpan: 4, styles: { fillColor: [255, 228, 196], textColor: [0,0,0], fontStyle: 'bold', fontSize: 8 } }]);
                 } else {
                     const prix = parseFloat(l.prix).toFixed(2) + ' €';
@@ -404,8 +417,9 @@
         doc.text("Total TTC :", 140, curY + 5); 
         doc.text(total.toFixed(2) + " €", 195, curY + 5, {align:'right'}); 
         
-        let yReste = curY + 12;
+        let yReste = curY + 12; // Position de base
         
+        // Affichage des lignes de paiement (Espèces/Virement)
         if(data.paiements && data.paiements.length > 0) {
             let yPay = curY + 10;
             doc.setFontSize(8); doc.setTextColor(100); doc.setFont("helvetica", "normal");
@@ -416,10 +430,10 @@
                 doc.text(`- ${parseFloat(p.montant).toFixed(2)} €`, 195, yPay, {align:'right'});
                 yPay += 4;
             });
-            yReste = yPay + 5;
+            yReste = yPay + 5; // On descend le cadre vert sous les paiements
         }
 
-        // Cadre Reste à Payer
+        // Reste à Payer (Cadre Vert)
         doc.setDrawColor(...greenColor); doc.setLineWidth(0.5); doc.rect(138, yReste - 5, 58, 10);
         doc.setTextColor(...greenColor); doc.setFontSize(10); doc.setFont("helvetica", "bold");
         doc.text("RESTE À PAYER :", 140, yReste + 2); 
@@ -427,26 +441,28 @@
 
         // --- 4. BLOCS SPÉCIFIQUES ---
         if (typeDoc === 'FACTURE') {
-            // MODE FACTURE (Cadre RIB réduit)
+            // MODE FACTURE
             if (curY + 45 > 280) { doc.addPage(); curY = 20; yReste = 20; }
             
-            // Hauteur du cadre réduite à 38 (au lieu de 45)
+            // Cadre Gris RIB (Taille optimisée 38mm)
             doc.setDrawColor(200); doc.setFillColor(250, 250, 250);
             doc.rect(15, curY, 115, 38, 'FD'); 
 
+            // Mention SOMME À PAYER
             doc.setFontSize(9); doc.setTextColor(...greenColor); doc.setFont("helvetica", "bold");
             doc.text(`Somme de ${reste.toFixed(2)} € à payer dès réception de la facture.`, 18, curY + 6);
 
+            // RIB TEXTE
             doc.setTextColor(0); doc.setFontSize(8); doc.setFont("helvetica", "bold");
             doc.text("Coordonnées Bancaires :", 18, curY + 14);
             
             doc.setFont("helvetica", "normal");
             doc.text("Banque : BANQUE POPULAIRE DU SUD", 18, curY + 19);
-            doc.text("Titulaire : POMPES FUNEBRES SOLIDAIRE", 18, curY + 24);
+            doc.text("Titulaire : EI POMPES FUNEBRES SOLIDAIRE", 18, curY + 24);
             doc.text("IBAN : FR76 1660 7000 0738 2217 4454 393", 18, curY + 29);
-            //doc.text("- (NA) TVA non applicable, art 293 B du CGI", 18, curY + 34);
+            doc.text("BIC : CCBPFRPPPPG", 18, curY + 34);
             
-            curY += 45; // Espace réduit après le bloc
+            curY += 45;
 
         } else {
             // MODE DEVIS (Signature)
@@ -461,19 +477,19 @@
              doc.text("accepte le présent devis prévisionnel.", 130, ySig + 8);
              doc.text("Le ........................................", 20, ySig + 16); 
              doc.text("à ........................................", 80, ySig + 16);
-             doc.text("NB : Signature précédée de la mention \"Lu et approuvé, bon pour acceptation\"", 20, ySig + 28);
+             doc.text("Signature précédée de la mention \"Lu et approuvé, bon pour acceptation\"", 20, ySig + 28);
              
              curY = ySig + 40;
         }
 
-        // 5. MENTIONS
+        // 5. MENTIONS LÉGALES
         let footerY = Math.max(curY, yReste + 15);
         if (typeDoc === 'FACTURE') footerY = Math.max(curY, yReste + 15);
 
-        doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(220, 38, 38);
+        doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(220, 38, 38); // Rouge
         doc.text("NB :", 15, footerY); doc.setTextColor(0); doc.setFont("helvetica", "normal");
         doc.text("- (NA) TVA non applicable, art 293 B du CGI", 25, footerY);
-        //doc.text("- (*) Prestations et fournitures obligatoires", 25, footerY + 4);
+        doc.text("- (*) Prestations et fournitures obligatoires", 25, footerY + 4);
         
         if (typeDoc === 'DEVIS') {
              footerY += 9;
@@ -485,14 +501,19 @@
         if (saveMode) { doc.save(`${typeDoc}_${numDoc}.pdf`); } else { window.open(doc.output('bloburl'), '_blank'); }
     };
 
-    // --- BOUTONS ---
+    // --- BOUTONS (Avec sauvegarde data) ---
     document.getElementById('btn-pdf').addEventListener('click', () => {
         const lignes = [];
         document.querySelectorAll('#tbody_lignes tr').forEach(tr => {
             if(tr.classList.contains('row-section')) {
                 lignes.push({ type: 'section', text: tr.querySelector('input').value });
             } else {
-                lignes.push({ type: 'item', desc: tr.querySelector('.val-desc').value, cat: tr.querySelector('.val-type').value, prix: parseFloat(tr.querySelector('.val-prix').value) || 0 });
+                lignes.push({ 
+                    type: 'item', 
+                    desc: tr.querySelector('.val-desc').value, 
+                    cat: tr.querySelector('.val-type').value, 
+                    prix: parseFloat(tr.querySelector('.val-prix').value) || 0 
+                });
             }
         });
         const dataEcran = {
@@ -632,5 +653,6 @@
     document.getElementById('dep_date_fac').valueAsDate = new Date();
     window.calculTotal = calculTotal;
 </script>
+
 </body>
 </html>
